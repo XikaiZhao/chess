@@ -11,7 +11,6 @@ void Player<isWhite>::getLegalMoves(std::vector<Move >& legalMoves) {
     if (numChecks <= 1) {
         for (const auto& p : _pieces) {
             p->getLegalMoves(_board, legalMoves);
-            p->_isPinned = false;
         }
     }
 };

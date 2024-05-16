@@ -2,8 +2,7 @@
 #define PIECE_H
 
 #include <vector>
-#include <utility>
-#include <map>
+#include <memory>
 #include "Defs.h"
 
 
@@ -26,7 +25,7 @@ public:
     }
     virtual ~Piece() {};
     
-    virtual Piece* clone() = 0;
+    virtual std::shared_ptr<Piece> clone() = 0;
 
     int getPosition() { return _ind; }
         
@@ -69,7 +68,7 @@ public:
         _type = PieceType::BISHOP;
         _isWhite = isWhite; 
     };
-    virtual Piece* clone() override { return new Bishop<isWhite>(*this); }
+    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Bishop<isWhite> >(*this); }
 
     virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
 };
@@ -82,7 +81,7 @@ public:
         _type = PieceType::ROOK;
         _isWhite = isWhite; 
     };
-    virtual Piece* clone() override { return new Rook<isWhite>(*this); }
+    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Rook<isWhite> >(*this); }
 
     virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
 
@@ -96,7 +95,7 @@ public:
         _type = PieceType::QUEEN;
         _isWhite = isWhite; 
     };
-    virtual Piece* clone() override { return new Queen<isWhite>(*this); }
+    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Queen<isWhite> >(*this); }
 
     virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
 };
@@ -113,7 +112,7 @@ public:
         _type = PieceType::KNIGHT;
         _isWhite = isWhite; 
     };
-    virtual Piece* clone() override { return new Knight<isWhite>(*this); }
+    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Knight<isWhite> >(*this); }
 
     virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
 
@@ -137,7 +136,7 @@ public:
         _type = PieceType::PAWN;
         _isWhite = isWhite;
     };
-    virtual Piece* clone() override { return new Pawn<isWhite>(*this); }
+    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Pawn<isWhite> >(*this); }
 
     virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
 
@@ -160,7 +159,7 @@ public:
         _type = PieceType::KING;;
         _isWhite = isWhite;
     };
-    virtual Piece* clone() override { return new King<isWhite>(*this); }
+    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<King<isWhite> >(*this); }
 
     // update pieces that are checking the king
     void updatePinnedPieces(Board*board);

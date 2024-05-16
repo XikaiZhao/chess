@@ -29,7 +29,7 @@ public:
 
 private: 
     Board* _board;
-    const std::vector<Piece*>& _pieces;
+    const std::vector<std::shared_ptr<Piece> >& _pieces;
     King<isWhite>* _king;
 };
 

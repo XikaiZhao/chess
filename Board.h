@@ -1,9 +1,9 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include <utility>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include "Defs.h"
 #include "Piece.h" 
 
@@ -12,7 +12,7 @@
 #define FIRST_ROOK_ID 1
 #define FIRST_KNIGHT_ID 3
 #define FIRST_BISHOP_ID 5
-#define FIRST_PAWN_ID 8
+#define FIRST_PAWN_ID 7
 
 //class Piece;
 template<bool isWhite> class Pawn;
@@ -48,40 +48,30 @@ public:
         }
     }
 
-    ~Board() {
-        delete board[whiteKingPos];
-        delete board[blackKingPos]; 
-        for (int i = 0; i < NUM_PIECES; i++) {
-            if (whitePieces[i] != nullptr) {
-                delete whitePieces[i];
-            }
-            if (blackPieces[i] != nullptr)
-                delete blackPieces[i];
-        }
-    }
+    ~Board() {}
 
     template<bool isWhite>
-    static Piece* createPiece(PieceType type, int row, int col, int id) {
+    static std::shared_ptr<Piece> createPiece(PieceType type, int row, int col, int id) {
         switch (type) {
             case PieceType::PAWN:
-                return new Pawn<isWhite>(row, col, id);
+                return std::make_shared<Pawn<isWhite> >(row, col, id);
             case PieceType::ROOK:
-                return new Rook<isWhite>(row, col, id);
+                return std::make_shared<Rook<isWhite> >(row, col, id);
             case PieceType::KNIGHT:
-                return new Knight<isWhite>(row, col, id);
+                return std::make_shared<Knight<isWhite> >(row, col, id);
             case PieceType::BISHOP:
-                return new Bishop<isWhite>(row, col, id);
+                return std::make_shared<Bishop<isWhite> >(row, col, id);
             case PieceType::QUEEN:
-                return new Queen<isWhite>(row, col, id);
+                return std::make_shared<Queen<isWhite> >(row, col, id);
             case PieceType::KING:
-                return new King<isWhite>(row, col, id);
+                return std::make_shared<King<isWhite> >(row, col, id);
             default:
                 return nullptr;
         }
     }
 
     Piece* getPiece(int loc) const {
-        return board[loc];
+        return board[loc].get();
     }
 
     const Move& getLastMove() const {
@@ -96,48 +86,45 @@ public:
 
     template<bool isWhite>
     King<isWhite>* getKing() const {
-        return isWhite ? dynamic_cast<King<isWhite>*>(board[whiteKingPos]) : dynamic_cast<King<isWhite>*>(board[blackKingPos]);
+        return isWhite ? dynamic_cast<King<isWhite>*>(board[whiteKingPos].get()) : dynamic_cast<King<isWhite>*>(board[blackKingPos].get());
     }
 
-    // return a list of white/black pieces without the king
     template<bool isWhite>
-    const std::vector<Piece*>& getPieces() const {
+    const std::vector<std::shared_ptr<Piece> >& getPieces() const {
         return isWhite ? whitePieces : blackPieces;
     }
 
     void printBoard() {
-        for (int row = nrow-1; row >= 0; row--) {
-            std::cout << row + 1 << " ";
-            for (int col = 0; col < ncol; col++) {
-                std::cout << getPieceSymbol(board[col + row*ncol]) << " ";
+        for (int row = 7; row >= 0; row--) {
+            printf("%d ", row + 1);
+            for (int col = 0; col < 8; col++) {
+                printf("%s ", getPieceSymbol(board[col + row*ncol].get()).c_str());
             }
-            std::cout << std::endl;
+            printf("\n");
         }
-        std::cout << "  a b c d e f g h" << std::endl;
+        printf("  a b c d e f g h\n");
     }
 
 
     int whiteKingPos, blackKingPos;
-    std::vector<Piece*> whitePieces, blackPieces; // no king
+    std::vector<std::shared_ptr<Piece> > whitePieces, blackPieces; // no king
 
 private:
-    std::vector<Piece*> board;
+    std::vector<std::shared_ptr<Piece> > board;
     Move lastMove, lastMove2;
-    Piece* lastMovePieceChange = nullptr;
+    int lastMovePieceChangeID = -1;
     bool lastMoveFromInitPos = true;
 
     void setupPieces() {
-        whitePieces.resize(NUM_PIECES);
-        blackPieces.resize(NUM_PIECES);
+        whitePieces.resize(NUM_PIECES, nullptr);
+        blackPieces.resize(NUM_PIECES, nullptr);
 
         for (int i = 0; i < nele; i++) {
             if (board[i] != nullptr && board[i]->_type != PieceType::KING) {
-                if (board[i]->_isWhite) {
+                if (board[i]->_isWhite) 
                     whitePieces[board[i]->_id] = board[i];
-                }
-                else {
+                else 
                     blackPieces[board[i]->_id] = board[i];
-                }
             }
         }
     }
@@ -177,30 +164,41 @@ private:
 
     std::string getPieceSymbol(const Piece* piece) {
         if (piece == nullptr) 
-            return " ";
-        
+            return "-";
+    
+        std::string colorCode;
+        std::string resetCode = "\033[0m";
+
+        if (piece->_isWhite) {
+            colorCode = "\033[34m"; // Blue for white pieces
+        } else {
+            colorCode = "\033[32m"; // Green for black pieces
+        }
+
+        std::string symbol;
         if (piece->_isWhite) {
             switch (piece->_type) {
-                case PieceType::PAWN:   return "P";
-                case PieceType::KNIGHT: return "N";
-                case PieceType::BISHOP: return "B";
-                case PieceType::ROOK:   return "R";
-                case PieceType::QUEEN:  return "Q";
-                case PieceType::KING:   return "K";
-                default: return " ";
+                case PieceType::PAWN:   symbol = "P"; break;
+                case PieceType::KNIGHT: symbol = "N"; break;
+                case PieceType::BISHOP: symbol = "B"; break;
+                case PieceType::ROOK:   symbol = "R"; break;
+                case PieceType::QUEEN:  symbol = "Q"; break;
+                case PieceType::KING:   symbol = "K"; break;
+                default: symbol = "-";
             }
         } else {
             switch (piece->_type) {
-                case PieceType::PAWN:   return "p";
-                case PieceType::KNIGHT: return "n";
-                case PieceType::BISHOP: return "b";
-                case PieceType::ROOK:   return "r";
-                case PieceType::QUEEN:  return "q";
-                case PieceType::KING:   return "k";
-                default: return " ";
+                case PieceType::PAWN:   symbol = "p"; break;
+                case PieceType::KNIGHT: symbol = "n"; break;
+                case PieceType::BISHOP: symbol = "b"; break;
+                case PieceType::ROOK:   symbol = "r"; break;
+                case PieceType::QUEEN:  symbol = "q"; break;
+                case PieceType::KING:   symbol = "k"; break;
+                default: symbol = "-";
             }
         }
-        return " ";
+
+        return colorCode + symbol + resetCode;
     }
 };
 
