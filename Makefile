@@ -1,7 +1,7 @@
 # Variables
-CXX = g++
-CXXFLAGS = -Wall -std=c++11
-OBJS = main.o Player.o Board.o
+CXX = g++ -g
+CXXFLAGS = -Wall -std=c++17
+OBJS = main.o Player.o Board.o Piece.o
 
 # Default target
 all: chess
@@ -18,6 +18,9 @@ Player.o: Player.h Player.cpp
 
 Board.o: Board.h Board.cpp
 	$(CXX) $(CXXFLAGS) -c Board.cpp
+
+Piece.o: Piece.h Piece.cpp
+	$(CXX) $(CXXFLAGS) -c Piece.cpp
 
 # Clean
 clean:

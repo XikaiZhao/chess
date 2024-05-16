@@ -101,3 +101,8 @@ void Board::undoLastMove() {
 
     lastMove = lastMove2;
 }
+
+template void Board::makeMove<true>(const Move& move);
+template void Board::makeMove<false>(const Move& move);
+template void Board::undoLastMove<true>();
+template void Board::undoLastMove<false>();

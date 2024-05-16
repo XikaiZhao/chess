@@ -5,7 +5,7 @@
 #include <utility>
 #include <map>
 #include "Defs.h"
-#include "Board.h"
+
 
 class Board;
 
@@ -36,29 +36,29 @@ public:
 
     virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) = 0;
 
-    void resetPinned() { _isPinned = NA; }
 
     PieceType _type = PieceType::NONE;
     bool _isWhite;
     bool _onBoard = true;
     bool _atInitialPos = true;
     int _id = -1;
-    
 
-protected:
-    int _row, _col, _ind;
     enum PinnedDirection {
         NA, HOR, VER, DIAG1 /*a1 to h8*/, DIAG2 /*a8 to h1*/
     };
     PinnedDirection _isPinned = NA;
+    
+
+protected:
+    int _row, _col, _ind;
 
     template <bool isWhite>
-    void getMovesHelperFunc(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
+    void getLegalMovesHelperFunc(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
 
     template <bool isWhite>
     void getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int rowDelta, int colDelta);
     template <bool isWhite>
-    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int targetIndex, int rowDelta, int colDelta);
+    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int rowDelta, int colDelta);
 };
 
 /////////////////////
@@ -122,7 +122,7 @@ private:
     static const int colDelta[8];
 
     void getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/);
-    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int targetIndex, int /*rowDelta*/, int /*colDelta*/);
+    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int /*rowDelta*/, int /*colDelta*/);
 };
 
 /////////////////////
@@ -143,7 +143,7 @@ public:
 
 private:
     void getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/);
-    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int targetIndex, int /*rowDelta*/, int /*colDelta*/);
+    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int /*rowDelta*/, int /*colDelta*/);
 
     void addPromotionMoves(std::vector<Move> &legalMoves, int index, int newPos);
 };
@@ -169,11 +169,11 @@ public:
     // if checkingPiece is not nullptr, it will be updated with the index of the last checking piece found
     int isChecked(Board* board, int* checkingPiece = nullptr);
 
-    virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override {};
+    virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
 
 private:
     void getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int rowDelta, int colDelta);
-    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int targetIndex, int rowDelta, int colDelta) {}
+    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int rowDelta, int colDelta) {}
 
     int isCheckedHelper1(Board* board, PieceType type, int rowDelta, int colDelta, int* checkingPiece = nullptr);
     int isCheckedHelper2(Board* board, bool checkdiag, int rowDelta, int colDelta, int* checkingPiece = nullptr);
