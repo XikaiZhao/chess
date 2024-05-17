@@ -9,6 +9,14 @@
 #include "Defs.h"
 
 template <bool isWhite>
+class Player;
+template <bool isWhite>
+class HumanPlayer;
+template <bool isWhite>
+class RandomPlayer;
+
+
+template <bool isWhite>
 class Player 
 {
 public:
@@ -24,13 +32,39 @@ public:
 
     void getLegalMoves(std::vector<Move >& legalMoves);
     void makeMove(const Move& move);
-    void makeMove();
+    virtual void makeMove() {};
     // void undoLastMove() {};
 
-private: 
+protected: 
     Board* _board;
     const std::vector<std::shared_ptr<Piece> >& _pieces;
     King<isWhite>* _king;
+};
+
+/////////////////////////////////////////////////////
+template <bool isWhite>
+class HumanPlayer : public Player<isWhite> {
+    using Player<isWhite>::_board;
+    using Player<isWhite>::getLegalMoves;
+
+public:
+    HumanPlayer(Board* board) : Player<isWhite>(board) {}
+    HumanPlayer(const HumanPlayer<isWhite>& other) : Player<isWhite>(other) {}
+
+    void makeMove() override;
+};
+
+/////////////////////////////////////////////////////
+template <bool isWhite>
+class RandomPlayer : public Player<isWhite> {
+    using Player<isWhite>::_board;
+    using Player<isWhite>::getLegalMoves;
+
+public:
+    RandomPlayer(Board* board) : Player<isWhite>(board) {}
+    RandomPlayer(const RandomPlayer<isWhite>& other) : Player<isWhite>(other) {}
+
+    void makeMove() override;
 };
 
 #endif //PLAYER_H

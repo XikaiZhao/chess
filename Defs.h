@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <random>
+
 #define nrow 8
 #define ncol 8
 #define nele 64
@@ -11,8 +14,6 @@
 #define QUEEN_IND 14 
 
 enum PieceType {NONE, PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING};
-
-#include <string>
 
 static inline std::string posToString(int pos) {
     int row = pos / ncol, col = pos % ncol;
@@ -27,6 +28,15 @@ static inline int stringToPos(const std::string& s) {
         return -1;
     return row * ncol + col;
 }
+
+static inline int generateRandomInt(int min, int max) {
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist6(min, max); // distribution in range [min, max]
+
+    return dist6(rng);
+}
+
 struct Move
 {
     int curPos = -1;
@@ -43,3 +53,4 @@ struct Move
         return s;
     }
 };
+
