@@ -28,7 +28,7 @@ void Board::makeMove(const Move& move) {
     }
     else {
         // en passant
-        if (board[move.curPos]->_type == PAWN && std::abs(move.curPos - move.newPos) != ncol && board[move.newPos] == nullptr) {
+        if (board[move.curPos]->_type == PAWN && std::abs(move.curPos - move.newPos) == 1 && board[move.newPos] == nullptr) {
             board[lastMove.newPos]->_onBoard = false;
             lastMovePieceChangeID = board[lastMove.newPos]->_id;
             board[lastMove.newPos] = nullptr;     
@@ -53,12 +53,9 @@ void Board::makeMove(const Move& move) {
     lastMove = move;
 }
 
+// call makeMove first before calling this function
 template<bool isWhite>
-void Board::undoLastMove() {
-    if (lastMovePieceChangeID == -1) {
-        throw std::runtime_error("No moves to undo"); // call updatePosition first
-    }
-    
+void Board::undoLastMove() {    
     int c = lastMove.newPos%ncol;
     int r = lastMove.newPos/ncol;
 

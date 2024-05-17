@@ -130,9 +130,10 @@ private:
     }
 
     void init() {
+        std::cout << "Board::init" << std::endl;
         for (int c = 0; c < ncol; c++) {
             board[c +   ncol] = createPiece<true >(PieceType::PAWN, 1, c, FIRST_PAWN_ID+c); 
-            board[c + 6*ncol] = createPiece<false>(PieceType::PAWN, 1, c, FIRST_PAWN_ID+c); 
+            board[c + 6*ncol] = createPiece<false>(PieceType::PAWN, 6, c, FIRST_PAWN_ID+c); 
         }     
 
         board[0         ] = createPiece<true> (PieceType::ROOK, 0, 0, FIRST_ROOK_ID);
@@ -156,7 +157,7 @@ private:
         board[4         ] = createPiece<true >(PieceType::KING,0, 4, 15);
         board[4 + 7*ncol] = createPiece<false>(PieceType::KING,7, 4, 15);
 
-        whiteKingPos = 3;
+        whiteKingPos = 4;
         blackKingPos = 4 + 7*ncol;   
 
         setupPieces();     

@@ -1,6 +1,7 @@
 #ifndef PIECE_H
 #define PIECE_H
 
+#include <iostream>
 #include <vector>
 #include <memory>
 #include "Defs.h"
@@ -35,6 +36,8 @@ public:
 
     virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) = 0;
 
+    friend std::ostream& operator<<(std::ostream& os, const Piece& p);
+
 
     PieceType _type = PieceType::NONE;
     bool _isWhite;
@@ -60,6 +63,32 @@ protected:
     void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int rowDelta, int colDelta);
 };
 
+inline std::ostream& operator<<(std::ostream& os, const Piece& p) {
+    std::string s;
+    if (p._type == PieceType::PAWN) 
+        s = "Pawn";
+    else if (p._type == PieceType::ROOK)
+        s = "Rook";
+    else if (p._type == PieceType::KNIGHT)
+        s = "Knight";
+    else if (p._type == PieceType::BISHOP)
+        s = "Bishop";
+    else if (p._type == PieceType::QUEEN)
+        s = "Queen";
+    else if (p._type == PieceType::KING)
+        s = "King";
+    else 
+        s = "Unknown";
+
+    os << s.c_str() << "(";
+    os << (p._isWhite ? "White" : "Black") << ")";
+    os << ", ID: " << p._id;
+    os << ", Position: " << p._row << "," << p._col;
+    os << ", isPinned: " << p._isPinned;
+    os << ", atInitialPos: " << p._atInitialPos;
+    os << ", onBoard: " << p._onBoard;
+    return os;
+}
 /////////////////////
 template<bool isWhite>
 class Bishop : public Piece {
@@ -119,7 +148,8 @@ public:
 private:
     static const int rowDelta[8];
     static const int colDelta[8];
-
+    
+    void getLegalMovesHelperFunc(Board *board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
     void getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/);
     void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int /*rowDelta*/, int /*colDelta*/);
 };
@@ -141,7 +171,8 @@ public:
     virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
 
 private:
-    void getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/);
+    void getLegalMovesHelperFunc(Board *board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
+    void getLegalMovesHelper(Board *board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/);
     void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int /*rowDelta*/, int /*colDelta*/);
 
     void addPromotionMoves(std::vector<Move> &legalMoves, int index, int newPos);
@@ -171,7 +202,7 @@ public:
     virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
 
 private:
-    void getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int rowDelta, int colDelta);
+    void getLegalMovesHelper(Board *board, std::vector<Move> &legalMoves, int rowDelta, int colDelta);
     void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int rowDelta, int colDelta) {}
 
     int isCheckedHelper1(Board* board, PieceType type, int rowDelta, int colDelta, int* checkingPiece = nullptr);

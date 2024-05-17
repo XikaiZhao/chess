@@ -24,8 +24,8 @@ public:
 
     void getLegalMoves(std::vector<Move >& legalMoves);
     void makeMove(const Move& move);
-    //void undoLastMove() {};
-
+    void makeMove();
+    // void undoLastMove() {};
 
 private: 
     Board* _board;
