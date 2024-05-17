@@ -503,30 +503,20 @@ void King<isWhite>::getLegalMoves(Board* board, std::vector<Move >& legalMoves, 
     int cols[2] = {0, 7};
     int colDelta[2] = {-1, 1};
     for (int i = 0; i < 2; i++) {
-        Piece* p = board->getPiece(cols[i] + _row*ncol);
-        if (p != nullptr && p->_atInitialPos) {
-            bool canCastle = true;
-            int c = _col + colDelta[i];
-            while (canCastle && (c > 1 || c < ncol-1)) {
-                if (board->getPiece(c + _row*ncol) != nullptr) {
-                    canCastle = false;
-                }
-                c += colDelta[i];
-            }
-
-            c = _col + colDelta[i];
-            while (canCastle && (c > 1 || c < ncol-1)) {
-                board->makeMove<isWhite>(Move{_ind, c + _row*ncol});
-                if (isChecked(board, nullptr)) {
-                    canCastle = false;
-                }
-                board->undoLastMove<isWhite>();
-                c += colDelta[i];
-            }
-
-            if (canCastle)
-                legalMoves.push_back(Move{_ind, _col+ colDelta[i]*2 + _row*ncol});
+        // check if rook is at initial position
+        const Piece* p = board->getPiece(cols[i] + _row*ncol);
+        bool canCastle = (p != nullptr && p->_atInitialPos);
+        // check if there are pieces between king and rook
+        for (int c = _col; canCastle && (c += colDelta[i]) > 0 && c < ncol-1; canCastle = (board->getPiece(c + _row*ncol) == nullptr));
+        // check if king will pass through check
+        for (int c = _col; canCastle && (c += colDelta[i]) > 1 && c < ncol-1; ) {
+            board->makeMove<isWhite>(Move{_ind, c + _row*ncol});
+            canCastle = (isChecked(board, nullptr) == 0);
+            board->undoLastMove<isWhite>();
         }
+        // add castling move
+        if (canCastle)
+            legalMoves.push_back(Move{_ind, _col+ colDelta[i]*2 + _row*ncol});
     }
 }
 
