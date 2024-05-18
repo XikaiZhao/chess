@@ -23,12 +23,12 @@ void Board::makeMove(const Move& move) {
         board[move.newPos]->_atInitialPos = false;
         board[move.curPos] = nullptr;
 
-        std::vector<std::shared_ptr<Piece> > & pieces = (isWhite) ? whitePieces : blackPieces;
+        std::vector<std::shared_ptr<Piece> >& pieces = (isWhite) ? whitePieces : blackPieces;
         pieces[id] = board[move.newPos];
     }
     else {
         // en passant
-        if (board[move.curPos]->_type == PAWN && std::abs(move.curPos - move.newPos) == 1 && board[move.newPos] == nullptr) {
+        if (board[move.curPos]->_type == PAWN && move.curPos%ncol != c && board[move.newPos] == nullptr) {
             board[lastMove.newPos]->_onBoard = false;
             lastMovePieceChangeID = board[lastMove.newPos]->_id;
             board[lastMove.newPos] = nullptr;     
@@ -79,9 +79,9 @@ void Board::undoLastMove() {
         board[lastMove.curPos]->_atInitialPos = lastMoveFromInitPos;
         board[lastMove.newPos] = nullptr;
         if (lastMovePieceChangeID >= 0) {
-            int ind = (isWhite) ? whitePieces[lastMovePieceChangeID]->getPosition(): blackPieces[lastMovePieceChangeID]->getPosition();
-            board[ind] = (isWhite) ? whitePieces[lastMovePieceChangeID] : blackPieces[lastMovePieceChangeID];
-            board[ind]->_onBoard = true;
+            std::vector<std::shared_ptr<Piece> >& pieces = (isWhite) ? blackPieces : whitePieces; 
+            pieces[lastMovePieceChangeID]->_onBoard = true;
+            board[pieces[lastMovePieceChangeID]->getPosition()] = pieces[lastMovePieceChangeID];
         }  
 
         // castling (move rook)

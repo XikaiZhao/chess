@@ -263,7 +263,7 @@ void Pawn<isWhite>::getLegalMovesHelper(Board*board, std::vector<Move> &legalMov
         // en passant
         const Move& lastMove = board->getLastMove();
         if (_row == lastMove.newPos/ncol && std::abs(_col - lastMove.newPos%ncol) == 1 &&
-            board->getPiece(lastMove.newPos)->_type == PAWN && 
+            board->getPiece(lastMove.newPos)->_type == PieceType::PAWN && 
             std::abs(lastMove.curPos/ncol-lastMove.newPos/ncol) == 2) 
         {
             legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});

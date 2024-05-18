@@ -60,18 +60,17 @@ void HumanPlayer<isWhite>::makeMove() {
 
         int curPosInt = stringToPos(curPos);
         int newPosInt = stringToPos(newPos);
-
-        move.curPos = curPosInt, move.newPos = newPosInt;
         if (curPosInt == -1 || newPosInt == -1) {
             std::cout << "Invalid input. Try again." << std::endl;
             continue;
         }
+        move.curPos = curPosInt, move.newPos = newPosInt;
 
-        if (_board->getPiece(curPosInt)->_type == PieceType::PAWN && (newPosInt/ncol == (isWhite ? 7 : 0))) {
+        const Piece* p = _board->getPiece(curPosInt);
+        if (p != nullptr && _board->getPiece(curPosInt)->_type == PieceType::PAWN && (newPosInt/ncol == (isWhite ? 7 : 0))) {
             std::cout << "Pawn promotion, enter new piece type (queen, rook, knight, bishop): ";
             std::string newPieceType;
             std::cin >> newPieceType;
-            std::cout << std::endl;
 
             if (newPieceType == "queen") {
                 move.newPieceType = PieceType::QUEEN;
@@ -91,6 +90,7 @@ void HumanPlayer<isWhite>::makeMove() {
             }
             
         }
+
         std::cout << "Entered move: " << move.toString() << std::endl;
         for (const auto& m : legalMoves) {
             if (m.curPos == move.curPos && m.newPos == move.newPos && m.newPieceType == move.newPieceType) {
