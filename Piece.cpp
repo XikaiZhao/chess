@@ -44,8 +44,8 @@ void Piece::getLegalMovesKingCheckedHelper(Board* board, std::vector<Move>& lega
     int row_target = pieceIndexKingChecked / ncol;
     int col_target = pieceIndexKingChecked % ncol;
 
-    int dRow = (row_target == row_king) ? 0 :(row_target - row_king) / std::abs(row_target - row_king);
-    int dCol = (col_target == col_king) ? 0 :(col_target - col_king) / std::abs(col_target - col_king);
+    int dRow = row_target - row_king;
+    int dCol = col_target - col_king;
 
     const Piece* p = board->getPiece(pieceIndexKingChecked);
     bool needToCapture = (p->_type == PieceType::PAWN || p->_type == PieceType::KNIGHT);
@@ -66,9 +66,7 @@ void Piece::getLegalMovesKingCheckedHelper(Board* board, std::vector<Move>& lega
             if (r >= std::min(row_king, row_target) && r <= std::max(row_king, row_target) &&
                 c >= std::min(col_king, col_target) && c <= std::max(col_king, col_target)) 
             {   
-                int dr = (r-row_king == 0) ? 0 : (r - row_king) / std::abs(r - row_king);
-                int dc = (c-col_king == 0) ? 0 : (c - col_king) / std::abs(c - col_king);
-                if (dr == dRow && dc == dCol) {
+                if ((r - row_king)*dCol == (c - col_king)*dRow) {
                     legalMoves.push_back(Move{_ind, nn});
                     break;
                 }
@@ -287,8 +285,8 @@ void Pawn<isWhite>::getLegalMovesKingCheckedHelper(Board* board, std::vector<Mov
     int row_target = pieceIndexKingChecked / ncol;
     int col_target = pieceIndexKingChecked % ncol;
 
-    int dRow = (row_target == row_king) ? 0 :(row_target - row_king) / std::abs(row_target - row_king);
-    int dCol = (col_target == col_king) ? 0 :(col_target - col_king) / std::abs(col_target - col_king);
+    int dRow = row_target - row_king;
+    int dCol = col_target - col_king;
 
     const Piece* p = board->getPiece(pieceIndexKingChecked);
     bool needToCapture = (p->_type == PieceType::PAWN || p->_type == PieceType::KNIGHT);
@@ -305,11 +303,8 @@ void Pawn<isWhite>::getLegalMovesKingCheckedHelper(Board* board, std::vector<Mov
             if (r >= std::min(row_king, row_target) && r <= std::max(row_king, row_target) &&
                 c >= std::min(col_king, col_target) && c <= std::max(col_king, col_target)) 
             {   
-                int dr = (r-row_king == 0) ? 0 : (r - row_king) / std::abs(r - row_king);
-                int dc = (c-col_king == 0) ? 0 : (c - col_king) / std::abs(c - col_king);
-                if (dr == dRow && dc == dCol) {
+                if ((r - row_king)*dCol == (c - col_king)*dRow) 
                     return true;
-                }
             }
         }
         return false;

@@ -5,18 +5,18 @@ void Player<isWhite>::getLegalMoves(std::vector<Move >& legalMoves) {
     int pieceIndexKingChecked = -1;
     
     int numChecks = _king -> isChecked(_board, &pieceIndexKingChecked);
-    std::cout << "numChecks: " << numChecks << std::endl;
+    std::cout << "numChecks: " << numChecks << ", pieceIndexKingChecked: " << pieceIndexKingChecked << std::endl;
 
     _king -> updatePinnedPieces(_board);
     
     //std::cout << "numLegalMoves: " << legalMoves.size() << std::endl;
-    _king -> getLegalMoves(_board, legalMoves);
+    _king -> getLegalMoves(_board, legalMoves, pieceIndexKingChecked);
     //std::cout << "numLegalMoves: " << legalMoves.size() << std::endl;
     
     if (numChecks <= 1) {
         for (const auto& p : _pieces) {
             //std::cout << *p << std::endl;
-            p->getLegalMoves(_board, legalMoves);
+            p->getLegalMoves(_board, legalMoves, pieceIndexKingChecked);
             //std::cout << "numLegalMoves: " << legalMoves.size() << std::endl;
             //for (const auto& m : legalMoves) {
             //    std::cout << m.toString() << std::endl;
