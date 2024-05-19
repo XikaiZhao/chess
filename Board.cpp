@@ -38,14 +38,21 @@ void Board::makeMove(const Move& move) {
         board[move.curPos] = nullptr; // remove current piece on the old cell
         
         // castling (move rook)
-        if (board[move.newPos]->_type == KING && std::abs(move.curPos%ncol - c) == 2) {
-            int rook_c = (ncol - c -1 < c) ? ncol-1 : 0;
-            int ind = rook_c + r*ncol;
-            int ind_new = (ncol - c -1 < c) ?  move.newPos - 1 : move.newPos + 1;
-            board[ind_new] = board[ind];
-            board[ind_new]->updatePosition(ind_new);
-            board[ind_new]->_atInitialPos = false;
-            board[ind] = nullptr;     
+        if (board[move.newPos]->_type == KING) {
+            if (isWhite) 
+                whiteKingPos = move.newPos;
+            else 
+                blackKingPos = move.newPos;
+            
+            if (std::abs(move.curPos%ncol - c) == 2) {
+                int rook_c = (ncol - c -1 < c) ? ncol-1 : 0;
+                int ind = rook_c + r*ncol;
+                int ind_new = (ncol - c -1 < c) ?  move.newPos - 1 : move.newPos + 1;
+                board[ind_new] = board[ind];
+                board[ind_new]->updatePosition(ind_new);
+                board[ind_new]->_atInitialPos = false;
+                board[ind] = nullptr;     
+            }
         }
     }
 
@@ -85,14 +92,21 @@ void Board::undoLastMove() {
         }  
 
         // castling (move rook)
-        if (board[lastMove.curPos]->_type == KING && std::abs(lastMove.curPos%ncol - c) == 2) {
-            int rook_c = (ncol - c -1 < c) ? ncol-1 : 0;
-            int ind = rook_c + r*ncol;
-            int ind_new = (ncol - c -1 < c) ?  lastMove.newPos - 1 : lastMove.newPos + 1;
-            board[ind] = board[ind_new]; 
-            board[ind]->updatePosition(ind);
-            board[ind]->_atInitialPos = true;
-            board[ind_new] = nullptr;   
+        if (board[lastMove.curPos]->_type == KING) {
+            if (isWhite) 
+                whiteKingPos = lastMove.curPos;
+            else 
+                blackKingPos = lastMove.curPos;
+                
+            if (std::abs(lastMove.curPos%ncol - c) == 2) {
+                int rook_c = (ncol - c -1 < c) ? ncol-1 : 0;
+                int ind = rook_c + r*ncol;
+                int ind_new = (ncol - c -1 < c) ?  lastMove.newPos - 1 : lastMove.newPos + 1;
+                board[ind] = board[ind_new]; 
+                board[ind]->updatePosition(ind);
+                board[ind]->_atInitialPos = true;
+                board[ind_new] = nullptr;   
+            }
         }
         
     }
