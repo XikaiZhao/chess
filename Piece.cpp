@@ -518,9 +518,9 @@ void King<isWhite>::getLegalMoves(Board* board, std::vector<Move >& legalMoves, 
 template<bool isWhite>
 void King<isWhite>::pinCheckHelper(Board* board, bool checkDiag, PinnedDirection dir, int rowDelta, int colDelta) {
     int r = _row, c = _col;
+    int pieceInd = -1;
     while ((r += rowDelta, r >= 0 && r < nrow) && (c += colDelta, c >= 0 && c < ncol)) {
         int ind = c + r * ncol;
-        int pieceInd = -1;
         const Piece* p = board->getPiece(ind);
         if (p == nullptr)
             continue;
