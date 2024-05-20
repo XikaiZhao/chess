@@ -191,7 +191,6 @@ void Knight<isWhite>::getLegalMovesKingCheckedHelper(Board* board, std::vector<M
             {   
                 if ((r - row_king)*dCol == (c - col_king)*dRow) {
                     legalMoves.push_back(Move{_ind, nn});
-                    break;
                 }
             }
         }
