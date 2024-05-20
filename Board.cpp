@@ -1,6 +1,158 @@
 #include "Board.h"
 #include <cmath>
 #include <stdexcept>
+#include <sstream>
+
+void Board::parsePiecePlacement(const std::string& placement) {
+    auto charToPieceType = [&](char ch) {
+        switch (ch) {
+            case 'p': return PieceType::PAWN;
+            case 'r': return PieceType::ROOK;
+            case 'n': return PieceType::KNIGHT;
+            case 'b': return PieceType::BISHOP;
+            case 'q': return PieceType::QUEEN;
+            case 'k': return PieceType::KING;
+            default: throw std::invalid_argument("Invalid piece type");
+        }
+    };
+
+    std::cout << "parsePiecePlacement, placement = " << placement << std::endl;
+    int whiteID = 0, blackID = 0;
+    int r = 0, c = 0;
+    for (size_t i = 0; i < placement.size(); i++) {
+        char ch = placement[i];
+        if (ch == '/') {
+            r++;
+            c = 0;
+        }
+        else if (std::isdigit(ch)) {
+            c += ch - '0';
+        }
+        else {
+            bool isWhite = std::isupper(ch);
+            PieceType type = charToPieceType(std::tolower(ch));
+            if (isWhite) {
+                if (type == PieceType::KING) {
+                    whiteKingPos = c + r*ncol;
+                    board[c + r*ncol] = createPiece<true>(type, r, c, 15);
+                    board[c + r*ncol]->_atInitialPos = false;
+                } else {
+                    board[c + r*ncol] = createPiece<true>(type, r, c, whiteID++);
+                    board[c + r*ncol]->_atInitialPos = false;
+                }
+
+            }
+            else {
+                if (type == PieceType::KING) {
+                    blackKingPos = c + r*ncol;
+                    board[c + r*ncol] = createPiece<false>(type, r, c, 15);
+                    board[c + r*ncol]->_atInitialPos = false;
+                } else {
+                    board[c + r*ncol] = createPiece<false>(type, r, c, blackID++);
+                    board[c + r*ncol]->_atInitialPos = false;
+                }
+            }
+            c++;
+        }
+    }
+}
+
+void Board::parseActiveColor(const std::string& color) {
+    if (color == "w") 
+        isWhiteToMove = true;
+    else if (color == "b") 
+        isWhiteToMove = false;
+    else 
+        throw std::runtime_error("Invalid active color");
+}
+
+void Board::parseCastlingAvailability(const std::string& castlingAvailability) {
+    bool whiteCanCastleQueenSide=false, whiteCanCatsleKingSide=false, blackCanCastleQueenSide=false, blackCanCatsleKingSide=false;
+
+    for (char ch : castlingAvailability) {
+        switch (ch) {
+            case 'K': whiteCanCatsleKingSide = true; break;
+            case 'Q': whiteCanCastleQueenSide = true; break;
+            case 'k': blackCanCatsleKingSide = true; break;
+            case 'q': blackCanCastleQueenSide = true; break;
+            case '-': break;
+            default: throw std::runtime_error("Invalid castling availability");
+        }
+    }
+    
+    if (whiteCanCastleQueenSide || whiteCanCatsleKingSide) {
+        if (board[4] == nullptr || board[4]->_type != PieceType::KING || !board[4]->_isWhite) 
+            throw std::runtime_error("Invalid castling availability");
+
+        board[4]->_atInitialPos = true; 
+        if (whiteCanCastleQueenSide) {
+            if (board[0] == nullptr || board[0]->_type != PieceType::ROOK || !board[0]->_isWhite) 
+                throw std::runtime_error("Invalid castling availability");
+            board[0]->_atInitialPos = true;  
+        }
+        else if (whiteCanCatsleKingSide) {
+            if (board[7] == nullptr || board[7]->_type != PieceType::ROOK || !board[7]->_isWhite) 
+                throw std::runtime_error("Invalid castling availability");
+            board[7]->_atInitialPos = true;    
+        }
+    }
+
+    if (blackCanCastleQueenSide || blackCanCatsleKingSide) {
+        if (board[4 + 7*ncol] == nullptr || board[4 + 7*ncol]->_type != PieceType::KING || board[4 + 7*ncol]->_isWhite) 
+            throw std::runtime_error("Invalid castling availability");
+
+        board[4 + 7*ncol]->_atInitialPos = true; 
+
+        if (blackCanCastleQueenSide) {
+            if (board[0 + 7*ncol] == nullptr || board[0 + 7*ncol]->_type != PieceType::ROOK || board[0 + 7*ncol]->_isWhite) 
+                throw std::runtime_error("Invalid castling availability");
+            board[0 + 7*ncol]->_atInitialPos = true;  
+        }
+        else if (blackCanCatsleKingSide) {
+            if (board[7 + 7*ncol] == nullptr || board[7 + 7*ncol]->_type != PieceType::ROOK || board[7 + 7*ncol]->_isWhite) 
+                throw std::runtime_error("Invalid castling availability");
+            board[7 + 7*ncol]->_atInitialPos = true;    
+        }
+    }    
+    
+}
+
+void Board::parseEnPassantTargetSquare(const std::string& enPassantTargetSquare){
+    if (enPassantTargetSquare == "-") 
+        return;
+    
+    int c = enPassantTargetSquare[0] - 'a';
+    int r = enPassantTargetSquare[1] - '1';
+    if (r == 3) {
+        lastMove.curPos =   ncol + c;
+        lastMove.newPos = 4*ncol + c;
+    }
+    else if (r == 6) {
+        lastMove.curPos = 7*ncol + c;
+        lastMove.newPos = 5*ncol + c;
+    }
+    else 
+        throw std::runtime_error("Invalid en passant target square");
+}
+
+void Board::init(std::string fenString) {
+    std::istringstream iss(fenString);
+    std::string part;
+    std::vector<std::string> parts;
+    
+    while (getline(iss, part, ' ')) 
+        parts.push_back(part);
+
+    if (parts.size() != 6) 
+        throw std::runtime_error("Invalid FEN string");
+    
+    parsePiecePlacement(parts[0]);
+    parseActiveColor(parts[1]);
+    parseCastlingAvailability(parts[2]);
+    parseEnPassantTargetSquare(parts[3]);
+
+    setupPieces();
+}
 
 template<bool isWhite>
 void Board::makeMove(const Move& move) {
@@ -37,13 +189,13 @@ void Board::makeMove(const Move& move) {
         board[move.newPos]->updatePosition(move.newPos); // reset piece position
         board[move.curPos] = nullptr; // remove current piece on the old cell
         
-        // castling (move rook)
         if (board[move.newPos]->_type == KING) {
             if (isWhite) 
                 whiteKingPos = move.newPos;
             else 
                 blackKingPos = move.newPos;
             
+            // castling (move rook)
             if (std::abs(move.curPos%ncol - c) == 2) {
                 int rook_c = (ncol - c -1 < c) ? ncol-1 : 0;
                 int ind = rook_c + r*ncol;
@@ -58,6 +210,7 @@ void Board::makeMove(const Move& move) {
 
     lastMove2 = lastMove;
     lastMove = move;
+    isWhiteToMove = !isWhiteToMove;
 }
 
 // call makeMove first before calling this function
@@ -113,6 +266,7 @@ void Board::undoLastMove() {
     
     lastMovePieceChangeID = -1;
     lastMove = lastMove2;
+    isWhiteToMove = !isWhiteToMove;
 }
 
 template void Board::makeMove<true>(const Move& move);

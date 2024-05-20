@@ -8,11 +8,6 @@
 #include "Piece.h" 
 
 #define NUM_PIECES 15 
-#define QUEEN_ID 0
-#define FIRST_ROOK_ID 1
-#define FIRST_KNIGHT_ID 3
-#define FIRST_BISHOP_ID 5
-#define FIRST_PAWN_ID 7
 
 //class Piece;
 template<bool isWhite> class Pawn;
@@ -46,6 +41,15 @@ public:
             whitePieces[i] = board[board_->whitePieces[i]->getPosition()];
             blackPieces[i] = board[board_->blackPieces[i]->getPosition()];
         }
+
+        isWhiteToMove = board_->isWhiteToMove;
+
+        lastMove = board_->lastMove;
+    }
+
+    Board(const std::string fenString) {
+        board.resize(nele, nullptr);
+        init(fenString);
     }
 
     ~Board() {}
@@ -108,6 +112,7 @@ public:
 
     int whiteKingPos, blackKingPos;
     std::vector<std::shared_ptr<Piece> > whitePieces, blackPieces; // no king
+    bool isWhiteToMove = true;
 
 private:
     std::vector<std::shared_ptr<Piece> > board;
@@ -131,37 +136,45 @@ private:
 
     void init() {
         std::cout << "Board::init" << std::endl;
+        int whiteID = 0, blackID = 0;
         for (int c = 0; c < ncol; c++) {
-            board[c +   ncol] = createPiece<true >(PieceType::PAWN, 1, c, FIRST_PAWN_ID+c); 
-            board[c + 6*ncol] = createPiece<false>(PieceType::PAWN, 6, c, FIRST_PAWN_ID+c); 
+            board[c +   ncol] = createPiece<true >(PieceType::PAWN, 1, c, whiteID++); 
+            board[c + 6*ncol] = createPiece<false>(PieceType::PAWN, 6, c, blackID++); 
         }     
 
-        board[0         ] = createPiece<true> (PieceType::ROOK, 0, 0, FIRST_ROOK_ID);
-        board[7         ] = createPiece<true >(PieceType::ROOK, 0, 7, FIRST_ROOK_ID+1);
-        board[0 + 7*ncol] = createPiece<false>(PieceType::ROOK, 7, 0, FIRST_ROOK_ID);
-        board[7 + 7*ncol] = createPiece<false>(PieceType::ROOK, 7, 7, FIRST_ROOK_ID+1);
+        board[0         ] = createPiece<true> (PieceType::ROOK, 0, 0, whiteID++);
+        board[7         ] = createPiece<true >(PieceType::ROOK, 0, 7, whiteID++);
+        board[0 + 7*ncol] = createPiece<false>(PieceType::ROOK, 7, 0, blackID++);
+        board[7 + 7*ncol] = createPiece<false>(PieceType::ROOK, 7, 7, blackID++);
 
-        board[1         ] = createPiece<true >(PieceType::KNIGHT,0, 1, FIRST_KNIGHT_ID);
-        board[6         ] = createPiece<true >(PieceType::KNIGHT,0, 6, FIRST_KNIGHT_ID+1);
-        board[1 + 7*ncol] = createPiece<false>(PieceType::KNIGHT,7, 1, FIRST_KNIGHT_ID);
-        board[6 + 7*ncol] = createPiece<false>(PieceType::KNIGHT,7, 6, FIRST_KNIGHT_ID+1);
+        board[1         ] = createPiece<true >(PieceType::KNIGHT, 0, 1, whiteID++);
+        board[6         ] = createPiece<true >(PieceType::KNIGHT, 0, 6, whiteID++);
+        board[1 + 7*ncol] = createPiece<false>(PieceType::KNIGHT, 7, 1, blackID++);
+        board[6 + 7*ncol] = createPiece<false>(PieceType::KNIGHT, 7, 6, blackID++);
 
-        board[2         ] = createPiece<true >(PieceType::BISHOP,0, 2, FIRST_BISHOP_ID);
-        board[5         ] = createPiece<true >(PieceType::BISHOP,0, 5, FIRST_BISHOP_ID+1);
-        board[2 + 7*ncol] = createPiece<false>(PieceType::BISHOP,7, 2, FIRST_BISHOP_ID);
-        board[5 + 7*ncol] = createPiece<false>(PieceType::BISHOP,7, 5, FIRST_BISHOP_ID+1);
+        board[2         ] = createPiece<true >(PieceType::BISHOP, 0, 2, whiteID++);
+        board[5         ] = createPiece<true >(PieceType::BISHOP, 0, 5, whiteID++);
+        board[2 + 7*ncol] = createPiece<false>(PieceType::BISHOP, 7, 2, blackID++);
+        board[5 + 7*ncol] = createPiece<false>(PieceType::BISHOP, 7, 5, blackID++);
 
-        board[3         ] = createPiece<true >(PieceType::QUEEN,0, 3, QUEEN_ID);
-        board[3 + 7*ncol] = createPiece<false>(PieceType::QUEEN,7, 3, QUEEN_ID);
+        board[3         ] = createPiece<true >(PieceType::QUEEN, 0, 3, whiteID++);
+        board[3 + 7*ncol] = createPiece<false>(PieceType::QUEEN, 7, 3, blackID++);
 
-        board[4         ] = createPiece<true >(PieceType::KING,0, 4, 15);
-        board[4 + 7*ncol] = createPiece<false>(PieceType::KING,7, 4, 15);
+        board[4         ] = createPiece<true >(PieceType::KING, 0, 4, 15);
+        board[4 + 7*ncol] = createPiece<false>(PieceType::KING, 7, 4, 15);
 
         whiteKingPos = 4;
         blackKingPos = 4 + 7*ncol;   
 
-        setupPieces();     
+        setupPieces();  
     };
+
+    void parsePiecePlacement(const std::string& placement);
+    void parseActiveColor(const std::string &color);
+    void parseCastlingAvailability(const std::string& castlingAvailability);
+    void parseEnPassantTargetSquare(const std::string& enPassantTargetSquare);
+
+    void init(std::string fenString);
 
     std::string getPieceSymbol(const Piece* piece) {
         if (piece == nullptr) 
