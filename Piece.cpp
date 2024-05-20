@@ -227,13 +227,18 @@ template<bool isWhite>
 void Pawn<isWhite>::getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/) {
     int row_new = (isWhite) ? _row+1 : _row-1;
     if (row_new >= 0 && row_new < nrow) {
-        // move straight
+        // move straight    
         int nn = _col + row_new*ncol;
         if (board->getPiece(nn) == nullptr) {
             if (row_new == (isWhite ? 7 : 0)) 
                 addPromotionMoves(legalMoves, _ind, nn);
             else 
                 legalMoves.push_back(Move{_ind, nn});
+
+            // move 2 squares
+            int nn2 = _col + (isWhite?_row+2:_row-2)*ncol;
+            if ((isWhite ? _row == 1 : _row == 6) && board->getPiece(nn2) == nullptr) 
+                legalMoves.push_back(Move{_ind, nn2});
         } 
         
         if (_isPinned == NA) {
@@ -264,12 +269,6 @@ void Pawn<isWhite>::getLegalMovesHelper(Board*board, std::vector<Move> &legalMov
         {
             legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});
         }
-    }
-
-    // move 2 squares
-    int nn = _col + (isWhite?_row+2:_row-2)*ncol;
-    if ((isWhite ? _row == 1 : _row == 6) && board->getPiece(nn) == nullptr) {
-        legalMoves.push_back(Move{_ind, nn});
     }
 }
 
@@ -319,6 +318,13 @@ void Pawn<isWhite>::getLegalMovesKingCheckedHelper(Board* board, std::vector<Mov
                 else 
                     legalMoves.push_back(Move{_ind, nn});
             }
+
+            // move 2 squares
+            int r = (isWhite?_row+2:_row-2);
+            int nn2 = _col + r*ncol;
+            if ((isWhite ? _row == 1 : _row == 6) && board->getPiece(nn2) == nullptr && canBlockCheck(r, _col, false)) {
+                legalMoves.push_back(Move{_ind, nn2});
+            }
         } 
              
         if (_isPinned == NA) {
@@ -353,14 +359,6 @@ void Pawn<isWhite>::getLegalMovesKingCheckedHelper(Board* board, std::vector<Mov
             else if (canBlockCheck(row_new, lastMove.newPos%ncol, false))
                 legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});
         }
-    }
-
-    // move 2 squares
-    int r = (isWhite?_row+2:_row-2);
-    int nn = _col + r*ncol;
-    if ((isWhite ? _row == 1 : _row == 6) && board->getPiece(nn) == nullptr) {
-        if (canBlockCheck(r, _col, false))
-            legalMoves.push_back(Move{_ind, nn});
     }
 }
 
