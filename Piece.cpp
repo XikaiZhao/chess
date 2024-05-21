@@ -181,16 +181,18 @@ void Knight<isWhite>::getLegalMovesKingCheckedHelper(Board* board, std::vector<M
 
     for (int i = 0; i < 8; i++) {
         int r = _row + rowDelta[i], c = _col + colDelta[i];
-        int nn = c + r * ncol;
-        if (pieceIndexKingChecked == nn) {
-            legalMoves.push_back(Move{_ind, nn});
-        }
-        else if (!needToCapture && board->getPiece(nn) == nullptr){
-            if (r >= std::min(row_king, row_target) && r <= std::max(row_king, row_target) &&
-                c >= std::min(col_king, col_target) && c <= std::max(col_king, col_target)) 
-            {   
-                if ((r - row_king)*dCol == (c - col_king)*dRow) {
-                    legalMoves.push_back(Move{_ind, nn});
+        if (r >= 0 && r < nrow && c >= 0 && c < ncol) {
+            int nn = c + r * ncol;
+            if (pieceIndexKingChecked == nn) {
+                legalMoves.push_back(Move{_ind, nn});
+            }
+            else if (!needToCapture && board->getPiece(nn) == nullptr){
+                if (r >= std::min(row_king, row_target) && r <= std::max(row_king, row_target) &&
+                    c >= std::min(col_king, col_target) && c <= std::max(col_king, col_target)) 
+                {   
+                    if ((r - row_king)*dCol == (c - col_king)*dRow) {
+                        legalMoves.push_back(Move{_ind, nn});
+                    }
                 }
             }
         }
@@ -225,49 +227,58 @@ void Pawn<isWhite>::getLegalMovesHelperFunc(Board* board, std::vector<Move>& leg
 
 template<bool isWhite>
 void Pawn<isWhite>::getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/) {
+    if (_isPinned == HOR) return;
+
     int row_new = (isWhite) ? _row+1 : _row-1;
     if (row_new >= 0 && row_new < nrow) {
-        // move straight    
         int nn = _col + row_new*ncol;
-        if (board->getPiece(nn) == nullptr) {
-            if (row_new == (isWhite ? 7 : 0)) 
-                addPromotionMoves(legalMoves, _ind, nn);
-            else 
-                legalMoves.push_back(Move{_ind, nn});
+        if (_isPinned != DIAG1 &&  _isPinned != DIAG2) {
+            // move straight    
+            if (board->getPiece(nn) == nullptr) {
+                if (row_new == (isWhite ? 7 : 0)) 
+                    addPromotionMoves(legalMoves, _ind, nn);
+                else 
+                    legalMoves.push_back(Move{_ind, nn});
 
-            // move 2 squares
-            int nn2 = _col + (isWhite?_row+2:_row-2)*ncol;
-            if ((isWhite ? _row == 1 : _row == 6) && board->getPiece(nn2) == nullptr) 
-                legalMoves.push_back(Move{_ind, nn2});
-        } 
-        
-        if (_isPinned == NA) {
-            // move diagonal
-            Piece* p = board->getPiece(nn-1);
-            if (_col > 0 && p != nullptr && p->_isWhite != isWhite) {
-                if (row_new == (isWhite ? 7 : 0)) 
-                    addPromotionMoves(legalMoves, _ind, nn-1);
-                else 
-                    legalMoves.push_back(Move{_ind, nn-1});
-            }
-            p = board->getPiece(nn+1);
-            if (_col+1 < ncol && p != nullptr && p->_isWhite != isWhite) {
-                if (row_new == (isWhite ? 7 : 0)) 
-                    addPromotionMoves(legalMoves, _ind, nn+1);
-                else 
-                    legalMoves.push_back(Move{_ind, nn+1});
-            }
+                // move 2 squares
+                int nn2 = _col + (isWhite?_row+2:_row-2)*ncol;
+                if ((isWhite ? _row == 1 : _row == 6) && board->getPiece(nn2) == nullptr) 
+                    legalMoves.push_back(Move{_ind, nn2});
+            } 
         }
-    }
+        
+        
+        if (_isPinned != VER ) {
+            // move diagonal
+            const Move& lastMove = board->getLastMove();
+            bool canEnPassant = 
+                       (_row == lastMove.newPos/ncol && std::abs(_col - lastMove.newPos%ncol) == 1 &&
+                        board->getPiece(lastMove.newPos)->_type == PieceType::PAWN && 
+                        std::abs(lastMove.curPos/ncol-lastMove.newPos/ncol) == 2);
+                    
+            if (_isPinned != (isWhite ? DIAG1 : DIAG2)) {
+                const Piece* p = board->getPiece(nn-1);
+                if (_col > 0 && p != nullptr && p->_isWhite != isWhite) {
+                    if (row_new == (isWhite ? 7 : 0)) 
+                        addPromotionMoves(legalMoves, _ind, nn-1);
+                    else 
+                        legalMoves.push_back(Move{_ind, nn-1});
+                }
 
-    if (_isPinned == NA) {
-        // en passant
-        const Move& lastMove = board->getLastMove();
-        if (_row == lastMove.newPos/ncol && std::abs(_col - lastMove.newPos%ncol) == 1 &&
-            board->getPiece(lastMove.newPos)->_type == PieceType::PAWN && 
-            std::abs(lastMove.curPos/ncol-lastMove.newPos/ncol) == 2) 
-        {
-            legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});
+                if (canEnPassant && _col > lastMove.newPos%ncol) 
+                    legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});
+            }
+            if (_isPinned != (isWhite ? DIAG2 : DIAG1)) {
+                const Piece* p = board->getPiece(nn+1);
+                if (_col+1 < ncol && p != nullptr && p->_isWhite != isWhite) {
+                    if (row_new == (isWhite ? 7 : 0)) 
+                        addPromotionMoves(legalMoves, _ind, nn+1);
+                    else 
+                        legalMoves.push_back(Move{_ind, nn+1});
+                }
+                if (canEnPassant && _col < lastMove.newPos%ncol) 
+                    legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});
+            }
         }
     }
 }
@@ -275,6 +286,8 @@ void Pawn<isWhite>::getLegalMovesHelper(Board*board, std::vector<Move> &legalMov
 
 template<bool isWhite>
 void Pawn<isWhite>::getLegalMovesKingCheckedHelper(Board* board, std::vector<Move>& legalMoves, int pieceIndexKingChecked, int /*rowDelta*/, int /*colDelta*/){
+    if (_isPinned == HOR) return;
+
     int kingPos = isWhite ? board->whiteKingPos : board->blackKingPos;
     int row_king = kingPos / ncol;
     int col_king = kingPos % ncol;
@@ -284,17 +297,16 @@ void Pawn<isWhite>::getLegalMovesKingCheckedHelper(Board* board, std::vector<Mov
 
     int dRow = row_target - row_king;
     int dCol = col_target - col_king;
-
+    
     const Piece* p = board->getPiece(pieceIndexKingChecked);
     bool needToCapture = (p->_type == PieceType::PAWN || p->_type == PieceType::KNIGHT);
 
-    auto canBlockCheck = [&](int r, int c, bool canCapture) {
-        if (needToCapture && !canCapture) 
-            return false;
-
+    auto canStopCheck = [&](int r, int c, bool canCapture) {
         int nn = c + r * ncol;
-        if (needToCapture && canCapture && nn == pieceIndexKingChecked) 
+        if (canCapture && nn == pieceIndexKingChecked) 
             return true;
+        else if (needToCapture) 
+            return false;
 
         if (!needToCapture && board->getPiece(nn) == nullptr){
             if (r >= std::min(row_king, row_target) && r <= std::max(row_king, row_target) &&
@@ -309,64 +321,68 @@ void Pawn<isWhite>::getLegalMovesKingCheckedHelper(Board* board, std::vector<Mov
 
     int row_new = (isWhite) ? _row+1 : _row-1;
     if (row_new >= 0 && row_new < nrow) {
-        // move straight
         int nn = _col + row_new*ncol;
-        if (board->getPiece(nn) == nullptr) {
-            if (canBlockCheck(row_new, _col, false)) {
-                if (row_new == (isWhite ? 7 : 0)) 
-                    addPromotionMoves(legalMoves, _ind, nn);
-                else 
-                    legalMoves.push_back(Move{_ind, nn});
-            }
+        if (_isPinned != DIAG1 &&  _isPinned != DIAG2) {
+            // move straight
+            if (board->getPiece(nn) == nullptr) {
+                if (canStopCheck(row_new, _col, false)) {
+                    if (row_new == (isWhite ? 7 : 0)) 
+                        addPromotionMoves(legalMoves, _ind, nn);
+                    else 
+                        legalMoves.push_back(Move{_ind, nn});
+                }
 
-            // move 2 squares
-            int r = (isWhite?_row+2:_row-2);
-            int nn2 = _col + r*ncol;
-            if ((isWhite ? _row == 1 : _row == 6) && board->getPiece(nn2) == nullptr && canBlockCheck(r, _col, false)) {
-                legalMoves.push_back(Move{_ind, nn2});
-            }
-        } 
-             
-        if (_isPinned == NA) {
-            // move diagonal
-            Piece* p = board->getPiece(nn-1);
-            if (_col > 1 && p != nullptr && p->_isWhite != isWhite && canBlockCheck(row_new, _col-1, true)) {
-                if (row_new == (isWhite ? 7 : 0)) 
-                    addPromotionMoves(legalMoves, _ind, nn-1);
-                else 
-                    legalMoves.push_back(Move{_ind, nn-1});
-            }
-            p = board->getPiece(nn+1);
-            if (_col+1 < ncol && p != nullptr && p->_isWhite != isWhite && canBlockCheck(row_new, _col+1, true)) {
-                if (row_new == (isWhite ? 7 : 0)) 
-                    addPromotionMoves(legalMoves, _ind, nn+1);
-                else 
-                    legalMoves.push_back(Move{_ind, nn+1});
-            }
+                // move 2 squares
+                int r = (isWhite?_row+2:_row-2);
+                int nn2 = _col + r*ncol;
+                if ((isWhite ? _row == 1 : _row == 6) && board->getPiece(nn2) == nullptr && canStopCheck(r, _col, false)) {
+                    legalMoves.push_back(Move{_ind, nn2});
+                }
+            } 
         }
-    }
+             
+        if (_isPinned != VER) {
+            // move diagonal
+            const Move& lastMove = board->getLastMove();
+            bool canEnPassant = 
+                       (_row == lastMove.newPos/ncol && std::abs(_col - lastMove.newPos%ncol) == 1 &&
+                        board->getPiece(lastMove.newPos)->_type == PieceType::PAWN && 
+                        std::abs(lastMove.curPos/ncol-lastMove.newPos/ncol) == 2);
 
-    if (_isPinned == NA)
-    {    
-        // en passant
-        const Move& lastMove = board->getLastMove();
-        if (_row == lastMove.newPos/ncol && std::abs(_col - lastMove.newPos%ncol) == 1 &&
-            board->getPiece(lastMove.newPos)->_type == PAWN && 
-            std::abs(lastMove.curPos/ncol-lastMove.newPos/ncol) == 2) 
-        {
-            if (lastMove.newPos == pieceIndexKingChecked)
-                legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});
-            else if (canBlockCheck(row_new, lastMove.newPos%ncol, false))
-                legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});
+            if (_isPinned != (isWhite ? DIAG1 : DIAG2) && _col > 0) {  
+                p = board->getPiece(nn-1);
+                if (p != nullptr && p->_isWhite != isWhite && canStopCheck(row_new, _col-1, true)) {
+                    if (row_new == (isWhite ? 7 : 0)) 
+                        addPromotionMoves(legalMoves, _ind, nn-1);
+                    else 
+                        legalMoves.push_back(Move{_ind, nn-1});
+                }
+                if (canEnPassant && _col > lastMove.newPos%ncol) {
+                    if (lastMove.newPos == pieceIndexKingChecked || canStopCheck(row_new, lastMove.newPos%ncol, false))
+                        legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});
+                }
+            }
+            if (_isPinned != (isWhite ? DIAG2 : DIAG1) && _col+1 < ncol) {
+                p = board->getPiece(nn+1);
+                if (p != nullptr && p->_isWhite != isWhite && canStopCheck(row_new, _col+1, true)) {
+                    if (row_new == (isWhite ? 7 : 0)) 
+                        addPromotionMoves(legalMoves, _ind, nn+1);
+                    else 
+                        legalMoves.push_back(Move{_ind, nn+1});
+                }
+                if (canEnPassant && _col < lastMove.newPos%ncol) {
+                    if (lastMove.newPos == pieceIndexKingChecked || canStopCheck(row_new, lastMove.newPos%ncol, false))
+                        legalMoves.push_back(Move{_ind, lastMove.newPos%ncol+row_new*ncol});
+                }
+            }
         }
     }
 }
 
 template<bool isWhite>
 void Pawn<isWhite>::getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked) {
-    if (_onBoard && (_isPinned == NA || _isPinned == VER)) {
+    if (_onBoard)
         getLegalMovesHelperFunc(board, legalMoves, pieceIndexKingChecked, 0, 0);
-    }
     _isPinned = NA;
 }
 
@@ -403,6 +419,8 @@ int King<isWhite>::isCheckedHelper2(Board* board, bool checkdiag, int rowDelta, 
                 if (checkingPiece != nullptr) *checkingPiece = ind;
                 return 1;
             }
+            else 
+                return 0;
         }
     }
     return 0;
@@ -464,9 +482,8 @@ void King<isWhite>::getLegalMovesHelper(Board* board, std::vector<Move>& legalMo
             return;
             
         int opponentKingPos = isWhite ? board->blackKingPos : board->whiteKingPos;
-        if (opponentKingPos != pos - ncol - 1 && opponentKingPos != pos - ncol && opponentKingPos != pos - ncol + 1 &&
-            opponentKingPos != pos - 1 && opponentKingPos != pos + 1 &&
-            opponentKingPos != pos + ncol - 1 && opponentKingPos != pos + ncol && opponentKingPos != pos + ncol + 1) 
+        if ( (opponentKingPos < pos-ncol-1 || opponentKingPos > pos+ncol+1) ||
+             (opponentKingPos % ncol < newCol - 1 || opponentKingPos % ncol > newCol + 1) )      
         {
             Move move{_ind, pos};
             board->makeMove<isWhite>(move);
@@ -506,8 +523,14 @@ void King<isWhite>::getLegalMoves(Board* board, std::vector<Move >& legalMoves, 
             board->undoLastMove<isWhite>();
         }
         // add castling move
-        if (canCastle)
-            legalMoves.push_back(Move{_ind, _col+ colDelta[i]*2 + _row*ncol});
+        if (canCastle) {
+            int newCol = _col + colDelta[i]*2;
+            int pos = newCol + _row*ncol;
+            int opponentKingPos = isWhite ? board->blackKingPos : board->whiteKingPos;
+            if ( (opponentKingPos < pos-ncol-1 || opponentKingPos > pos+ncol+1) ||
+                 (opponentKingPos % ncol < newCol - 1 || opponentKingPos % ncol > newCol + 1) ) 
+                legalMoves.push_back(Move{_ind, pos});
+        }
     }
 }
 

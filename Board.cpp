@@ -17,12 +17,12 @@ void Board::parsePiecePlacement(const std::string& placement) {
     };
 
     std::cout << "parsePiecePlacement, placement = " << placement << std::endl;
-    int whiteID = 0, blackID = 0;
-    int r = 0, c = 0;
+    numWhitePieces = numBlackPieces = 0;
+    int r = 7, c = 0;
     for (size_t i = 0; i < placement.size(); i++) {
         char ch = placement[i];
         if (ch == '/') {
-            r++;
+            r--;
             c = 0;
         }
         else if (std::isdigit(ch)) {
@@ -37,7 +37,7 @@ void Board::parsePiecePlacement(const std::string& placement) {
                     board[c + r*ncol] = createPiece<true>(type, r, c, 15);
                     board[c + r*ncol]->_atInitialPos = false;
                 } else {
-                    board[c + r*ncol] = createPiece<true>(type, r, c, whiteID++);
+                    board[c + r*ncol] = createPiece<true>(type, r, c, numWhitePieces++);
                     board[c + r*ncol]->_atInitialPos = false;
                 }
 
@@ -48,13 +48,14 @@ void Board::parsePiecePlacement(const std::string& placement) {
                     board[c + r*ncol] = createPiece<false>(type, r, c, 15);
                     board[c + r*ncol]->_atInitialPos = false;
                 } else {
-                    board[c + r*ncol] = createPiece<false>(type, r, c, blackID++);
+                    board[c + r*ncol] = createPiece<false>(type, r, c, numBlackPieces++);
                     board[c + r*ncol]->_atInitialPos = false;
                 }
             }
             c++;
         }
     }
+    //printBoard();
 }
 
 void Board::parseActiveColor(const std::string& color) {
@@ -67,6 +68,7 @@ void Board::parseActiveColor(const std::string& color) {
 }
 
 void Board::parseCastlingAvailability(const std::string& castlingAvailability) {
+    std::cout << "parseCastlingAvailability, castlingAvailability = " << castlingAvailability << std::endl;
     bool whiteCanCastleQueenSide=false, whiteCanCatsleKingSide=false, blackCanCastleQueenSide=false, blackCanCatsleKingSide=false;
 
     for (char ch : castlingAvailability) {
@@ -90,7 +92,7 @@ void Board::parseCastlingAvailability(const std::string& castlingAvailability) {
                 throw std::runtime_error("Invalid castling availability");
             board[0]->_atInitialPos = true;  
         }
-        else if (whiteCanCatsleKingSide) {
+        if (whiteCanCatsleKingSide) {
             if (board[7] == nullptr || board[7]->_type != PieceType::ROOK || !board[7]->_isWhite) 
                 throw std::runtime_error("Invalid castling availability");
             board[7]->_atInitialPos = true;    
@@ -102,13 +104,12 @@ void Board::parseCastlingAvailability(const std::string& castlingAvailability) {
             throw std::runtime_error("Invalid castling availability");
 
         board[4 + 7*ncol]->_atInitialPos = true; 
-
         if (blackCanCastleQueenSide) {
             if (board[0 + 7*ncol] == nullptr || board[0 + 7*ncol]->_type != PieceType::ROOK || board[0 + 7*ncol]->_isWhite) 
                 throw std::runtime_error("Invalid castling availability");
             board[0 + 7*ncol]->_atInitialPos = true;  
         }
-        else if (blackCanCatsleKingSide) {
+        if (blackCanCatsleKingSide) {
             if (board[7 + 7*ncol] == nullptr || board[7 + 7*ncol]->_type != PieceType::ROOK || board[7 + 7*ncol]->_isWhite) 
                 throw std::runtime_error("Invalid castling availability");
             board[7 + 7*ncol]->_atInitialPos = true;    
@@ -118,18 +119,19 @@ void Board::parseCastlingAvailability(const std::string& castlingAvailability) {
 }
 
 void Board::parseEnPassantTargetSquare(const std::string& enPassantTargetSquare){
+    std::cout << "parseEnPassantTargetSquare, enPassantTargetSquare = " << enPassantTargetSquare << std::endl;
     if (enPassantTargetSquare == "-") 
         return;
     
     int c = enPassantTargetSquare[0] - 'a';
     int r = enPassantTargetSquare[1] - '1';
-    if (r == 3) {
+    if (r == 2) {
         lastMove.curPos =   ncol + c;
-        lastMove.newPos = 4*ncol + c;
+        lastMove.newPos = 3*ncol + c;
     }
-    else if (r == 6) {
-        lastMove.curPos = 7*ncol + c;
-        lastMove.newPos = 5*ncol + c;
+    else if (r == 5) {
+        lastMove.curPos = 6*ncol + c;
+        lastMove.newPos = 4*ncol + c;
     }
     else 
         throw std::runtime_error("Invalid en passant target square");

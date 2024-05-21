@@ -125,6 +125,8 @@ void RandomPlayer<isWhite>::makeMove() {
 
 template void Player<true>::getLegalMoves(std::vector<Move >& legalMoves);
 template void Player<false>::getLegalMoves(std::vector<Move >& legalMoves);
+template void HumanPlayer<true>::getLegalMovesWrapper(std::vector<Move >& legalMoves);
+template void HumanPlayer<false>::getLegalMovesWrapper(std::vector<Move >& legalMoves);
 template void HumanPlayer<true>::makeMove(); 
 template void HumanPlayer<false>::makeMove();
 template void RandomPlayer<true>::makeMove();

@@ -7,11 +7,6 @@
 #define ncol 8
 #define nele 64
 
-#define PAWN_IND 0
-#define ROOK_IND 8
-#define KNIGHT_IND 10
-#define BISHOP_IND 12
-#define QUEEN_IND 14 
 
 enum PieceType {NONE, PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING};
 
@@ -46,9 +41,21 @@ struct Move
     // define a print function
     std::string toString() const {
         //std::string s = std::to_string(curPos) + "->" + std::to_string(newPos) + " ";
-        std::string s = posToString(curPos) + "->" + posToString(newPos);
+        std::string s = posToString(curPos) + posToString(newPos);
         if (newPieceType != PieceType::NONE) {
-            s += " " + std::to_string(newPieceType);
+            switch (newPieceType)
+            {
+            case PieceType::BISHOP:
+                s += "b"; break;
+            case PieceType::KNIGHT:
+                s += "n"; break;
+            case PieceType::ROOK:
+                s += "r"; break;
+            case PieceType::QUEEN:
+                s += "q"; break;
+            default:
+                break;
+            }
         }
         return s;
     }

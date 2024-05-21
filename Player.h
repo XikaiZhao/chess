@@ -51,6 +51,10 @@ public:
     HumanPlayer(Board* board) : Player<isWhite>(board) {}
     HumanPlayer(const HumanPlayer<isWhite>& other) : Player<isWhite>(other) {}
 
+    void getLegalMovesWrapper(std::vector<Move>& legalMoves) {
+        this->getLegalMoves(legalMoves);  // Calls the protected method
+    }
+
     void makeMove() override;
 };
 
@@ -63,6 +67,10 @@ class RandomPlayer : public Player<isWhite> {
 public:
     RandomPlayer(Board* board) : Player<isWhite>(board) {}
     RandomPlayer(const RandomPlayer<isWhite>& other) : Player<isWhite>(other) {}
+
+    void getLegalMovesWrapper(std::vector<Move>& legalMoves) {
+        this->getLegalMoves(legalMoves);  // Calls the protected method
+    }
 
     void makeMove() override;
 };
