@@ -49,6 +49,7 @@ public:
         isWhiteToMove = board_->isWhiteToMove;
 
         lastMove = board_->lastMove;
+        lastMoveFromInitPos = board_->lastMoveFromInitPos;
     }
 
     Board(const std::string fenString) {

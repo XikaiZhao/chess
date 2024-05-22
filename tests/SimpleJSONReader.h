@@ -45,9 +45,7 @@ private:
     void parse(const std::string& json) {
         std::size_t pos = 0;
         while (pos < json.length()) {
-            //std::cout << "HERE " << pos << std::endl;
             pos = json.find('"', pos);
-            //std::cout << "HERE2 " << pos << std::endl;
             if (pos == std::string::npos) break;
 
             auto end_key = json.find('"', pos + 1);
@@ -56,8 +54,6 @@ private:
             std::string key = json.substr(pos + 1, end_key - pos - 1);
             pos = json.find(':', end_key);
             if (pos == std::string::npos) break;
-            //if (pos >= 70)
-                //std::cout << "HERE3 " << key << std::endl;
 
             pos = json.find_first_not_of(" \t\n\r\f\v:", pos);
             if (pos == std::string::npos) break;
@@ -70,7 +66,6 @@ private:
                 stringData[key] = json.substr(start_val, end_val - start_val);
                 pos = end_val + 1;
             } else if (value_indicator == '[') { // Array of strings
-                //std::cout <<"HERE4 " << key << std::endl;
                 pos++;
                 std::vector<std::string> values;
                 while (json[pos] != ']') {

@@ -5,7 +5,7 @@ void Player<isWhite>::getLegalMoves(std::vector<Move >& legalMoves) {
     int pieceIndexKingChecked = -1;
     
     int numChecks = _king -> isChecked(_board, &pieceIndexKingChecked);
-    std::cout << "numChecks: " << numChecks << ", pieceIndexKingChecked: " << pieceIndexKingChecked << std::endl;
+    //std::cout << "numChecks: " << numChecks << ", pieceIndexKingChecked: " << pieceIndexKingChecked << std::endl;
 
     _king -> updatePinnedPieces(_board);
     
@@ -23,11 +23,13 @@ void Player<isWhite>::getLegalMoves(std::vector<Move >& legalMoves) {
             //}
         }
     }
+    /*
     std::cout << "numLegalMoves: " << legalMoves.size() << std::endl;
     for (const auto& m : legalMoves) {
         std::cout << m.toString() << " ";
     }
     std::cout << std::endl;
+    */
 };
 
 template <bool isWhite>
