@@ -1,28 +1,28 @@
 #include "Player.h"
+#include "Piece.h"
+#include "King.h"
 
 template <bool isWhite>
-void Player<isWhite>::getLegalMoves(std::vector<Move >& legalMoves) {
+void Player<isWhite>::getLegalMoves(const Board& board, std::vector<Move >& legalMoves) {
     int pieceIndexKingChecked = -1;
     
-    int numChecks = _king -> isChecked(_board, &pieceIndexKingChecked);
-    //std::cout << "numChecks: " << numChecks << ", pieceIndexKingChecked: " << pieceIndexKingChecked << std::endl;
+    King<isWhite> king(board.getKingIndex(isWhite));
+    int numChecks = king.isChecked(board.getBoard(), &pieceIndexKingChecked);
+    //std::cout << "numChecks: " << numChecks << std::endl;
+    king.getLegalMoves(board, legalMoves, pieceIndexKingChecked);
 
-    _king -> updatePinnedPieces(_board);
-    
-    //std::cout << "numLegalMoves: " << legalMoves.size() << std::endl;
-    _king -> getLegalMoves(_board, legalMoves, pieceIndexKingChecked);
-    //std::cout << "numLegalMoves: " << legalMoves.size() << std::endl;
-    
     if (numChecks <= 1) {
-        for (const auto& p : _pieces) {
-            //std::cout << *p << std::endl;
-            p->getLegalMoves(_board, legalMoves, pieceIndexKingChecked);
-            //std::cout << "numLegalMoves: " << legalMoves.size() << std::endl;
-            //for (const auto& m : legalMoves) {
-            //    std::cout << m.toString() << std::endl;
-            //}
+        std::vector<int64_t> pinnedPieces(4, 0);
+        king.getPinnedPieces(board.getBoard(), pinnedPieces);
+
+        for (int i = 0; i < nele; i++) {
+            const char p = board.getPieceAt(i);
+            if (p != '-' && isupper(p) == isWhite && p != (isWhite? 'K' : 'k')) {
+                getLegalMovesFactory<isWhite>(i, p, board, pinnedPieces, legalMoves, pieceIndexKingChecked);
+            }
         }
     }
+
     /*
     std::cout << "numLegalMoves: " << legalMoves.size() << std::endl;
     for (const auto& m : legalMoves) {
@@ -33,17 +33,17 @@ void Player<isWhite>::getLegalMoves(std::vector<Move >& legalMoves) {
 };
 
 template <bool isWhite>
-void Player<isWhite>::makeMove(const Move& move) {
-    _board->makeMove<isWhite>(move);
+void Player<isWhite>::makeMove(Board& board, const Move& move) {
+    board.makeMove(move);
 };
 
 ///////////////////////////////////////////////////////////////////////////// 
 template <bool isWhite>
-void HumanPlayer<isWhite>::makeMove() {
+void HumanPlayer<isWhite>::makeMove(Board& board) {
     std::cout << (isWhite ? "White" : "Black") << " player's turn." << std::endl;
     
     std::vector<Move> legalMoves;
-    getLegalMoves(legalMoves);
+    getLegalMoves(board, legalMoves);
 
     Move move;
 
@@ -68,23 +68,23 @@ void HumanPlayer<isWhite>::makeMove() {
         }
         move.curPos = curPosInt, move.newPos = newPosInt;
 
-        const Piece* p = _board->getPiece(curPosInt);
-        if (p != nullptr && _board->getPiece(curPosInt)->_type == PieceType::PAWN && (newPosInt/ncol == (isWhite ? 7 : 0))) {
+        const char p = board.getPieceAt(curPosInt); 
+        if (p == '-' && std::tolower(p) == 'p' && (newPosInt/ncol == (isWhite ? 7 : 0))) {
             std::cout << "Pawn promotion, enter new piece type (queen, rook, knight, bishop): ";
             std::string newPieceType;
             std::cin >> newPieceType;
 
             if (newPieceType == "queen") {
-                move.newPieceType = PieceType::QUEEN;
+                move.newPieceType = 'q';
             }
             else if (newPieceType == "rook") {
-                move.newPieceType = PieceType::ROOK;
+                move.newPieceType = 'r';
             }
             else if (newPieceType == "knight") {
-                move.newPieceType = PieceType::KNIGHT;
+                move.newPieceType = 'n';
             }
             else if (newPieceType == "bishop") {
-                move.newPieceType = PieceType::BISHOP;
+                move.newPieceType = 'b';
             }
             else {
                 std::cout << "Invalid input. Try again." << std::endl;
@@ -104,7 +104,7 @@ void HumanPlayer<isWhite>::makeMove() {
             std::cout << "Invalid move. Try again." << std::endl;
     }
 
-    Player<isWhite>::makeMove(move);
+    Player<isWhite>::makeMove(board, move);
     std::cout << "Move made: " << move.toString() << std::endl;
 };
 
@@ -112,24 +112,27 @@ void HumanPlayer<isWhite>::makeMove() {
 #include <random>
 
 template <bool isWhite>
-void RandomPlayer<isWhite>::makeMove() {
+void RandomPlayer<isWhite>::makeMove(Board& board) {
     std::cout << (isWhite ? "White" : "Black") << " player's turn." << std::endl;
     
     std::vector<Move> legalMoves;
-    getLegalMoves(legalMoves);
+    getLegalMoves(board, legalMoves);
 
     Move move = legalMoves[generateRandomInt(0, legalMoves.size()-1)];
 
 
-    Player<isWhite>::makeMove(move);
+    Player<isWhite>::makeMove(board, move);
     std::cout << "Move made: " << move.toString() << std::endl;
 };
 
-template void Player<true>::getLegalMoves(std::vector<Move >& legalMoves);
-template void Player<false>::getLegalMoves(std::vector<Move >& legalMoves);
-template void HumanPlayer<true>::getLegalMovesWrapper(std::vector<Move >& legalMoves);
-template void HumanPlayer<false>::getLegalMovesWrapper(std::vector<Move >& legalMoves);
-template void HumanPlayer<true>::makeMove(); 
-template void HumanPlayer<false>::makeMove();
-template void RandomPlayer<true>::makeMove();
-template void RandomPlayer<false>::makeMove();
+/////////////////////////////////////////////////////////////////////////////
+template void Player<true>::getLegalMoves(const Board& board, std::vector<Move >& legalMoves);
+template void Player<false>::getLegalMoves(const Board& board, std::vector<Move >& legalMoves);
+template void HumanPlayer<true>::makeMove(Board& Board);
+template void HumanPlayer<false>::makeMove(Board& Board);
+template void HumanPlayer<true>::getLegalMovesWrapper(const Board& board, std::vector<Move>& legalMoves);
+template void HumanPlayer<false>::getLegalMovesWrapper(const Board& board, std::vector<Move>& legalMoves);
+template void RandomPlayer<true>::makeMove(Board& Board);
+template void RandomPlayer<false>::makeMove(Board& Board);
+template void RandomPlayer<true>::getLegalMovesWrapper(const Board& board, std::vector<Move>& legalMoves);
+template void RandomPlayer<false>::getLegalMovesWrapper(const Board& board, std::vector<Move>& legalMoves);

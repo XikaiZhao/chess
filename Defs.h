@@ -7,8 +7,13 @@
 #define ncol 8
 #define nele 64
 
+static inline bool isupper(char c) {
+    return c >= 'A' && c <= 'Z';
+}
 
-enum PieceType {NONE, PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING};
+static inline bool islower(char c) {
+    return c >= 'a' && c <= 'z';
+}
 
 static inline std::string posToString(int pos) {
     int row = pos / ncol, col = pos % ncol;
@@ -36,27 +41,15 @@ struct Move
 {
     int curPos = -1;
     int newPos = -1;
-    PieceType newPieceType = PieceType::NONE;
+    char newPieceType = '-';
 
     // define a print function
     std::string toString() const {
         //std::string s = std::to_string(curPos) + "->" + std::to_string(newPos) + " ";
         std::string s = posToString(curPos) + posToString(newPos);
-        if (newPieceType != PieceType::NONE) {
-            switch (newPieceType)
-            {
-            case PieceType::BISHOP:
-                s += "b"; break;
-            case PieceType::KNIGHT:
-                s += "n"; break;
-            case PieceType::ROOK:
-                s += "r"; break;
-            case PieceType::QUEEN:
-                s += "q"; break;
-            default:
-                break;
-            }
-        }
+        if (newPieceType != '-') 
+            s += newPieceType;  
+
         return s;
     }
 };

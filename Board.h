@@ -1,225 +1,98 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include <cstring>
 #include <iostream>
 #include <memory>
 #include "Defs.h"
-#include "Piece.h" 
-
-//#define NUM_PIECES 15 
-
-//class Piece;
-template<bool isWhite> class Pawn;
-template<bool isWhite> class Rook;
-template<bool isWhite> class Knight;
-template<bool isWhite> class Bishop;
-template<bool isWhite> class Queen;
-template<bool isWhite> class King;
 
 class Board {
 public:
-
     Board() {
-        board.resize(nele, nullptr); 
-        init();
+        _board = "RNBQKBNRPPPPPPPP................................pppppppprnbqkbnr";
     }
 
-    Board(const Board* board_) {
-        board.resize(nele, nullptr);
-        for (int i = 0; i < nele; i++) {
-            if (board_->board[i] != nullptr) {
-                board[i] = board_->board[i]->clone();
-            }
-        }
-        whiteKingPos = board_->whiteKingPos;    
-        blackKingPos = board_->blackKingPos;
-        numWhitePieces = board_->numWhitePieces;
-        numBlackPieces = board_->numBlackPieces;
+    Board(const Board &board) {
+        this->_board = board.getBoard();
+        this->whiteCanCastleKingSide = board.whiteCanCastleKingSide;
+        this->whiteCanCastleQueenSide = board.whiteCanCastleQueenSide;
+        this->blackCanCastleKingSide = board.blackCanCastleKingSide;
+        this->blackCanCastleQueenSide = board.blackCanCastleQueenSide;
 
-        whitePieces.resize(numWhitePieces);
-        blackPieces.resize(numBlackPieces   );
-        for (int i = 0; i < numWhitePieces; i++) {
-            whitePieces[i] = board[board_->whitePieces[i]->getPosition()];
-        }
-        for (int i = 0; i < numBlackPieces; i++) {
-            blackPieces[i] = board[board_->blackPieces[i]->getPosition()];
-        }
+        this->isWhiteToMove = board.isWhiteToMove;
+        this->whiteKingIndex = board.whiteKingIndex;
+        this->blackKingIndex = board.blackKingIndex;
+        this->enPassantCapture = board.enPassantCapture;
+    } 
 
-        isWhiteToMove = board_->isWhiteToMove;
-
-        lastMove = board_->lastMove;
-        lastMoveFromInitPos = board_->lastMoveFromInitPos;
-    }
-
-    Board(const std::string fenString) {
-        board.resize(nele, nullptr);
+    Board(std::string fenString) {
         init(fenString);
     }
 
-    ~Board() {}
-
-    template<bool isWhite>
-    static std::shared_ptr<Piece> createPiece(PieceType type, int row, int col, int id) {
-        switch (type) {
-            case PieceType::PAWN:
-                return std::make_shared<Pawn<isWhite> >(row, col, id);
-            case PieceType::ROOK:
-                return std::make_shared<Rook<isWhite> >(row, col, id);
-            case PieceType::KNIGHT:
-                return std::make_shared<Knight<isWhite> >(row, col, id);
-            case PieceType::BISHOP:
-                return std::make_shared<Bishop<isWhite> >(row, col, id);
-            case PieceType::QUEEN:
-                return std::make_shared<Queen<isWhite> >(row, col, id);
-            case PieceType::KING:
-                return std::make_shared<King<isWhite> >(row, col, id);
-            default:
-                return nullptr;
-        }
+    const std::string& getBoard() const {
+        return _board;
     }
 
-    Piece* getPiece(int loc) const {
-        return board[loc].get();
+    bool getWhiteCanCastleKingSide() const {
+        return whiteCanCastleKingSide;
     }
 
-    const Move& getLastMove() const {
-        return lastMove;
+    bool getWhiteCanCastleQueenSide() const {
+        return whiteCanCastleQueenSide;
     }
 
-    template<bool isWhite>
-    void makeMove(const Move& move);
-    
-    template<bool isWhite>
-    void undoLastMove();
-
-    template<bool isWhite>
-    King<isWhite>* getKing() const {
-        return isWhite ? dynamic_cast<King<isWhite>*>(board[whiteKingPos].get()) : dynamic_cast<King<isWhite>*>(board[blackKingPos].get());
+    bool getBlackCanCastleKingSide() const {
+        return blackCanCastleKingSide;
     }
 
-    template<bool isWhite>
-    const std::vector<std::shared_ptr<Piece> >& getPieces() const {
-        return isWhite ? whitePieces : blackPieces;
+    bool getBlackCanCastleQueenSide() const {
+        return blackCanCastleQueenSide;
     }
+
+    int getEnPassantCapture() const {
+        return enPassantCapture;
+    }
+
+    int getKingIndex(bool isWhite) const {
+        return isWhite ? whiteKingIndex : blackKingIndex;
+    }
+
+    char getPieceAt(int index) const {
+        return _board[index];
+    }
+
+    bool isWhiteTurn() const {
+        return isWhiteToMove;
+    }
+
+    void makeMove(const Move &move);
+    //void undoMove(const Move &move);
 
     void printBoard() {
         for (int row = 7; row >= 0; row--) {
             printf("%d ", row + 1);
             for (int col = 0; col < 8; col++) {
-                printf("%s ", getPieceSymbol(board[col + row*ncol].get()).c_str());
+                printf("%c ", _board[col + row*ncol]);
             }
             printf("\n");
         }
         printf("  a b c d e f g h\n");
     }
 
-
-    int whiteKingPos, blackKingPos;
-    std::vector<std::shared_ptr<Piece> > whitePieces, blackPieces; // no king
-    bool isWhiteToMove = true;
-    int numWhitePieces, numBlackPieces;
-
 private:
-    std::vector<std::shared_ptr<Piece> > board;
-    Move lastMove, lastMove2;
-    int lastMovePieceChangeID = -1;
-    bool lastMoveFromInitPos = true;
-
-    void setupPieces() {
-        whitePieces.resize(numWhitePieces, nullptr);
-        blackPieces.resize(numBlackPieces, nullptr);
-
-        for (int i = 0; i < nele; i++) {
-            if (board[i] != nullptr && board[i]->_type != PieceType::KING) {
-                if (board[i]->_isWhite) 
-                    whitePieces[board[i]->_id] = board[i];
-                else 
-                    blackPieces[board[i]->_id] = board[i];
-            }
-        }
-    }
-
-    void init() {
-        std::cout << "Board::init" << std::endl;
-        numWhitePieces = numBlackPieces = 0;
-        for (int c = 0; c < ncol; c++) {
-            board[c +   ncol] = createPiece<true >(PieceType::PAWN, 1, c, numWhitePieces++); 
-            board[c + 6*ncol] = createPiece<false>(PieceType::PAWN, 6, c, numBlackPieces++); 
-        }     
-
-        board[0         ] = createPiece<true> (PieceType::ROOK, 0, 0, numWhitePieces++);
-        board[7         ] = createPiece<true >(PieceType::ROOK, 0, 7, numWhitePieces++);
-        board[0 + 7*ncol] = createPiece<false>(PieceType::ROOK, 7, 0, numBlackPieces++);
-        board[7 + 7*ncol] = createPiece<false>(PieceType::ROOK, 7, 7, numBlackPieces++);
-
-        board[1         ] = createPiece<true >(PieceType::KNIGHT, 0, 1, numWhitePieces++);
-        board[6         ] = createPiece<true >(PieceType::KNIGHT, 0, 6, numWhitePieces++);
-        board[1 + 7*ncol] = createPiece<false>(PieceType::KNIGHT, 7, 1, numBlackPieces++);
-        board[6 + 7*ncol] = createPiece<false>(PieceType::KNIGHT, 7, 6, numBlackPieces++);
-
-        board[2         ] = createPiece<true >(PieceType::BISHOP, 0, 2, numWhitePieces++);
-        board[5         ] = createPiece<true >(PieceType::BISHOP, 0, 5, numWhitePieces++);
-        board[2 + 7*ncol] = createPiece<false>(PieceType::BISHOP, 7, 2, numBlackPieces++);
-        board[5 + 7*ncol] = createPiece<false>(PieceType::BISHOP, 7, 5, numBlackPieces++);
-
-        board[3         ] = createPiece<true >(PieceType::QUEEN, 0, 3, numWhitePieces++);
-        board[3 + 7*ncol] = createPiece<false>(PieceType::QUEEN, 7, 3, numBlackPieces++);
-
-        board[4         ] = createPiece<true >(PieceType::KING, 0, 4, 15);
-        board[4 + 7*ncol] = createPiece<false>(PieceType::KING, 7, 4, 15);
-
-        whiteKingPos = 4;
-        blackKingPos = 4 + 7*ncol;   
-
-        setupPieces();  
-    };
-
-    void parsePiecePlacement(const std::string& placement);
+    void parsePiecePlacement(const std::string &placement);
     void parseActiveColor(const std::string &color);
-    void parseCastlingAvailability(const std::string& castlingAvailability);
-    void parseEnPassantTargetSquare(const std::string& enPassantTargetSquare);
-
+    void parseCastlingAvailability(const std::string &castlingAvailability);
+    void parseEnPassantTargetSquare(const std::string &enPassantTargetSquare);
     void init(std::string fenString);
-
-    std::string getPieceSymbol(const Piece* piece) {
-        if (piece == nullptr) 
-            return "-";
     
-        std::string colorCode;
-        std::string resetCode = "\033[0m";
+    std::string _board;
+    bool isWhiteToMove = true;
 
-        if (piece->_isWhite) {
-            colorCode = "\033[34m"; // Blue for white pieces
-        } else {
-            colorCode = "\033[32m"; // Green for black pieces
-        }
+    bool whiteCanCastleKingSide = true, whiteCanCastleQueenSide = true, 
+         blackCanCastleKingSide = true, blackCanCastleQueenSide = true;
 
-        std::string symbol;
-        if (piece->_isWhite) {
-            switch (piece->_type) {
-                case PieceType::PAWN:   symbol = "P"; break;
-                case PieceType::KNIGHT: symbol = "N"; break;
-                case PieceType::BISHOP: symbol = "B"; break;
-                case PieceType::ROOK:   symbol = "R"; break;
-                case PieceType::QUEEN:  symbol = "Q"; break;
-                case PieceType::KING:   symbol = "K"; break;
-                default: symbol = "-";
-            }
-        } else {
-            switch (piece->_type) {
-                case PieceType::PAWN:   symbol = "p"; break;
-                case PieceType::KNIGHT: symbol = "n"; break;
-                case PieceType::BISHOP: symbol = "b"; break;
-                case PieceType::ROOK:   symbol = "r"; break;
-                case PieceType::QUEEN:  symbol = "q"; break;
-                case PieceType::KING:   symbol = "k"; break;
-                default: symbol = "-";
-            }
-        }
-
-        return colorCode + symbol + resetCode;
-    }
+    int whiteKingIndex = 4, blackKingIndex = 60;
+    int enPassantCapture = -1;
 };
 
 #endif //BOARD_H

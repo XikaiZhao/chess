@@ -5,9 +5,8 @@
 #include <vector>
 #include <memory>
 #include "Defs.h"
+#include "Board.h"
 
-
-class Board;
 
 class Piece;
 template<bool isWhite> class Pawn;
@@ -15,104 +14,48 @@ template<bool isWhite> class Rook;
 template<bool isWhite> class Knight;
 template<bool isWhite> class Bishop;
 template<bool isWhite> class Queen;
-template<bool isWhite> class King;
 
 
 class Piece {
-public:
-    Piece() {};
-    Piece(int row, int col, int id) :_id(id), _row(row), _col(col) { 
-        _ind = _col + _row*ncol; 
-    }
-    virtual ~Piece() {};
-    
-    virtual std::shared_ptr<Piece> clone() = 0;
-
-    int getPosition() { return _ind; }
-        
-    inline void updatePosition(int ind) { 
-        _row = ind/ncol, _col = ind%ncol, _ind = ind;
-    }
-
-    virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) = 0;
-
-    friend std::ostream& operator<<(std::ostream& os, const Piece& p);
-
-
-    PieceType _type = PieceType::NONE;
-    bool _isWhite;
-    bool _onBoard = true;
-    bool _atInitialPos = true;
-    int _id = -1;
-
-    enum PinnedDirection {
+protected:
+    enum PinnedDir {
         NA, HOR, VER, DIAG1 /*a1 to h8*/, DIAG2 /*a8 to h1*/
     };
-    PinnedDirection _isPinned = NA;
-    
 
-protected:
-    int _row, _col, _ind;
+    static PinnedDir getPinnedDir(int ind, std::vector<int64_t>& pinnedPieces){
+        int64_t mask = 1LL << ind;
+        if (pinnedPieces[0] & mask) 
+            return HOR;
+        else if (pinnedPieces[1] & mask)
+            return VER;
+        else if (pinnedPieces[2] & mask)
+            return DIAG1;
+        else if (pinnedPieces[3] & mask)
+            return DIAG2; 
+        return NA;
+    }
 
     template <bool isWhite>
-    void getLegalMovesHelperFunc(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
-
+    static void getLegalMovesHelperFunc(int ind, PinnedDir pinnedDir, const Board& board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
     template <bool isWhite>
-    void getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int rowDelta, int colDelta);
+    static void getLegalMovesHelper(int ind, PinnedDir pinnedDir, const std::string& board, std::vector<Move> &legalMoves, int rowDelta, int colDelta);
     template <bool isWhite>
-    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int rowDelta, int colDelta);
+    static void getLegalMovesKingCheckedHelper(int ind, PinnedDir pinnedDir, const std::string& board, std::vector<Move> &legalMoves, int kingPos, int pieceIndexKingChecked, int rowDelta, int colDelta);
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Piece& p) {
-    std::string s;
-    if (p._type == PieceType::PAWN) 
-        s = "Pawn";
-    else if (p._type == PieceType::ROOK)
-        s = "Rook";
-    else if (p._type == PieceType::KNIGHT)
-        s = "Knight";
-    else if (p._type == PieceType::BISHOP)
-        s = "Bishop";
-    else if (p._type == PieceType::QUEEN)
-        s = "Queen";
-    else if (p._type == PieceType::KING)
-        s = "King";
-    else 
-        s = "Unknown";
 
-    os << s.c_str() << "(";
-    os << (p._isWhite ? "White" : "Black") << ")";
-    os << ", ID: " << p._id;
-    os << ", Position: " << p._row << "," << p._col;
-    os << ", isPinned: " << p._isPinned;
-    os << ", atInitialPos: " << p._atInitialPos;
-    os << ", onBoard: " << p._onBoard;
-    return os;
-}
 /////////////////////
 template<bool isWhite>
 class Bishop : public Piece {
 public:
-    Bishop(int row, int col, int id) : Piece(row, col, id) {
-        _type = PieceType::BISHOP;
-        _isWhite = isWhite; 
-    };
-    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Bishop<isWhite> >(*this); }
-
-    virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
+    static void getLegalMoves(int ind, std::vector<int64_t>& pinnedPieces, const Board& board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1);
 };
 
 /////////////////////
 template<bool isWhite>
 class Rook : public Piece {
 public:
-    Rook(int row, int col, int id) : Piece(row, col, id) {
-        _type = PieceType::ROOK;
-        _isWhite = isWhite; 
-    };
-    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Rook<isWhite> >(*this); }
-
-    virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
+    static void getLegalMoves(int ind, std::vector<int64_t>& pinnedPieces, const Board& board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1);
 
 };
 
@@ -120,94 +63,70 @@ public:
 template<bool isWhite>
 class Queen : public Piece {
 public:
-    Queen(int row, int col, int id) : Piece(row, col, id) {
-        _type = PieceType::QUEEN;
-        _isWhite = isWhite; 
-    };
-    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Queen<isWhite> >(*this); }
-
-    virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
+    static void getLegalMoves(int ind, std::vector<int64_t>& pinnedPieces, const Board& board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1);
 };
 
 /////////////////////
 template<bool isWhite>
 class Knight : public Piece {
 public:
-    using Piece::_row;
-    using Piece::_col;
-    using Piece::_ind;
-    
-    Knight(int row, int col, int id) : Piece(row, col, id) {
-        _type = PieceType::KNIGHT;
-        _isWhite = isWhite; 
-    };
-    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Knight<isWhite> >(*this); }
-
-    virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
+    static void getLegalMoves(int ind, std::vector<int64_t>& pinnedPieces, const Board& board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1);
 
 private:
     static const int rowDelta[8];
     static const int colDelta[8];
     
-    void getLegalMovesHelperFunc(Board *board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
-    void getLegalMovesHelper(Board*board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/);
-    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int /*rowDelta*/, int /*colDelta*/);
+    static void getLegalMovesHelperFunc(int ind, Piece::PinnedDir pinnedDir, const Board& board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
+    static void getLegalMovesHelper(int ind, Piece::PinnedDir pinnedDir, const std::string& board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/);
+    static void getLegalMovesKingCheckedHelper(int ind, Piece::PinnedDir pinnedDir, const std::string& board, std::vector<Move> &legalMoves, int kingPos, int pieceIndexKingChecked, int /*rowDelta*/, int /*colDelta*/);
 };
 
 /////////////////////
 template<bool isWhite>
 class Pawn : public Piece {
 public:
-    using Piece::_row;
-    using Piece::_col;
-    using Piece::_ind;
-
-    Pawn(int row, int col, int id) : Piece(row, col, id) {
-        _type = PieceType::PAWN;
-        _isWhite = isWhite;
-    };
-    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<Pawn<isWhite> >(*this); }
-
-    virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
+    static void getLegalMoves(int ind, std::vector<int64_t>& pinnedPieces, const Board& board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1);
 
 private:
-    void getLegalMovesHelperFunc(Board *board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
-    void getLegalMovesHelper(Board *board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/);
-    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int /*rowDelta*/, int /*colDelta*/);
+    static void getLegalMovesHelperFunc(int ind, Piece::PinnedDir pinnedDir, const Board& board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int dx, int dy);
+    static void getLegalMovesHelper(int ind, Piece::PinnedDir pinnedDir, const Board& board, std::vector<Move> &legalMoves, int /*rowDelta*/, int /*colDelta*/);
+    static void getLegalMovesKingCheckedHelper(int ind, Piece::PinnedDir pinnedDir, const Board& board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int /*rowDelta*/, int /*colDelta*/);
 
-    void addPromotionMoves(std::vector<Move> &legalMoves, int index, int newPos);
+    static void addPromotionMoves(std::vector<Move> &legalMoves, int index, int newPos);
 };
 
-/////////////////////
 template<bool isWhite>
-class King : public Piece {
-public:
-    using Piece::_row;
-    using Piece::_col;
-    using Piece::_ind;
-
-    King(int row, int col, int id) : Piece(row, col, id) {
-        _type = PieceType::KING;;
-        _isWhite = isWhite;
-    };
-    virtual std::shared_ptr<Piece> clone() override { return std::make_shared<King<isWhite> >(*this); }
-
-    // update pieces that are checking the king
-    void updatePinnedPieces(Board*board);
-    
-    // return number of pieces that are checking the king
-    // if checkingPiece is not nullptr, it will be updated with the index of the last checking piece found
-    int isChecked(Board* board, int* checkingPiece = nullptr);
-
-    virtual void getLegalMoves(Board* board, std::vector<Move >& legalMoves, int pieceIndexKingChecked = -1) override;
-
-private:
-    void getLegalMovesHelper(Board *board, std::vector<Move> &legalMoves, int rowDelta, int colDelta);
-    void getLegalMovesKingCheckedHelper(Board*board, std::vector<Move> &legalMoves, int pieceIndexKingChecked, int rowDelta, int colDelta) {}
-
-    int isCheckedHelper1(Board* board, PieceType type, int rowDelta, int colDelta, int* checkingPiece = nullptr);
-    int isCheckedHelper2(Board* board, bool checkdiag, int rowDelta, int colDelta, int* checkingPiece = nullptr);
-    void pinCheckHelper(Board* board, bool checkDiag, PinnedDirection dir, int rowDelta, int colDelta);
-};
+void getLegalMovesFactory(int ind, char type, const Board& board, std::vector<int64_t>& pinnedPieces, std::vector<Move>& getLegalMoves, int pieceIndexKingChecked = -1) {
+        switch (type) {
+        case 'P':
+        case 'p':{ 
+            Pawn<isWhite>::getLegalMoves(ind, pinnedPieces, board, getLegalMoves, pieceIndexKingChecked);
+            break;
+        }
+        case 'N':
+        case 'n': {
+            Knight<isWhite>::getLegalMoves(ind, pinnedPieces, board, getLegalMoves, pieceIndexKingChecked);
+            break;
+        }
+        case 'B':
+        case 'b': {
+            Bishop<isWhite>::getLegalMoves(ind, pinnedPieces, board, getLegalMoves, pieceIndexKingChecked);
+            break;
+        }   
+        case 'R':   
+        case 'r': {
+            Rook<isWhite>::getLegalMoves(ind, pinnedPieces, board, getLegalMoves, pieceIndexKingChecked);
+            break;
+        }
+        case 'Q':
+        case 'q': {
+            Queen<isWhite>::getLegalMoves(ind, pinnedPieces, board, getLegalMoves, pieceIndexKingChecked);
+            break;
+        }
+        default:
+            std::cerr << "Invalid piece type: " << type << std::endl;
+            throw std::runtime_error("Invalid piece type");
+    }
+}
 
 #endif // PIECE_H

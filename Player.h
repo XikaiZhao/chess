@@ -5,7 +5,6 @@
 #include <utility>
 #include <vector>
 #include "Board.h"
-#include "Piece.h"
 #include "Defs.h"
 
 template <bool isWhite>
@@ -20,59 +19,38 @@ template <bool isWhite>
 class Player 
 {
 public:
-    Player(Board* board) : _board(board), _pieces(board->getPieces<isWhite>()), _king(board->getKing<isWhite>()) {}
-
-
-    Player(const Player<isWhite>& other) {
-        _board = other._board;
-        _pieces = _board->getPieces<isWhite>();
-        _king = _board->getKing<isWhite>();
-
-    }
-
-    void getLegalMoves(std::vector<Move >& legalMoves);
-    void makeMove(const Move& move);
-    virtual void makeMove() {};
+    void getLegalMoves(const Board& board, std::vector<Move >& legalMoves);
+    void makeMove(Board& board, const Move& move);
+    virtual void makeMove(Board& board) {};
     // void undoLastMove() {};
 
 protected: 
-    Board* _board;
-    const std::vector<std::shared_ptr<Piece> >& _pieces;
-    King<isWhite>* _king;
 };
 
 /////////////////////////////////////////////////////
 template <bool isWhite>
 class HumanPlayer : public Player<isWhite> {
-    using Player<isWhite>::_board;
     using Player<isWhite>::getLegalMoves;
 
 public:
-    HumanPlayer(Board* board) : Player<isWhite>(board) {}
-    HumanPlayer(const HumanPlayer<isWhite>& other) : Player<isWhite>(other) {}
-
-    void getLegalMovesWrapper(std::vector<Move>& legalMoves) {
-        this->getLegalMoves(legalMoves);  // Calls the protected method
+    void getLegalMovesWrapper(const Board& board, std::vector<Move>& legalMoves) {
+        this->getLegalMoves(board, legalMoves);  // Calls the protected method
     }
 
-    void makeMove() override;
+    void makeMove(Board& Board) override;
 };
 
 /////////////////////////////////////////////////////
 template <bool isWhite>
 class RandomPlayer : public Player<isWhite> {
-    using Player<isWhite>::_board;
     using Player<isWhite>::getLegalMoves;
 
 public:
-    RandomPlayer(Board* board) : Player<isWhite>(board) {}
-    RandomPlayer(const RandomPlayer<isWhite>& other) : Player<isWhite>(other) {}
-
-    void getLegalMovesWrapper(std::vector<Move>& legalMoves) {
-        this->getLegalMoves(legalMoves);  // Calls the protected method
+    void getLegalMovesWrapper(const Board& board, std::vector<Move>& legalMoves) {
+        this->getLegalMoves(board, legalMoves);  // Calls the protected method
     }
 
-    void makeMove() override;
+    void makeMove(Board& Board) override;
 };
 
 #endif //PLAYER_H

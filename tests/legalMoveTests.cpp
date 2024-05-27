@@ -11,16 +11,16 @@
 
 void testLegalMove(std::string fenString, std::vector<Move>& legalMoves) {
     Board board(fenString);
-    board.printBoard();
+    //board.printBoard();
 
-    if (board.isWhiteToMove){
-        //std::cout << "White to move" << std::endl;
-        HumanPlayer<true> player(&board);
-        player.getLegalMovesWrapper(legalMoves);
+    if (board.isWhiteTurn()) {
+        std::cout << "White to move" << std::endl;
+        Player<true> p;
+        p.getLegalMoves(board, legalMoves);
     } else {
-        //std::cout << "Black to move" << std::endl;
-        HumanPlayer<false> player(&board);
-        player.getLegalMovesWrapper(legalMoves);
+        std::cout << "Black to move" << std::endl;
+        Player<false> p;
+        p.getLegalMoves(board, legalMoves);
     }
 }
 
