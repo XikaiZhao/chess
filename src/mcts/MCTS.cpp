@@ -47,13 +47,13 @@ typename MCTreeSearch<MoveType, NodeStateType>::Node* MCTreeSearch<MoveType, Nod
   Node* child = node->children[0];
   int numBestChildren = 1;
   float maxScore = node->state.getCurrentPlayer()*child->score/child->num_visited 
-              + 2.0 * sqrt(log(node->num_visited/child->num_visited));
+              + 0.3 * sqrt(log(node->num_visited/child->num_visited));
   
   float currentPlayer = node->state.getCurrentPlayer();
   for (int i = 1; i < node->num_children_visited; i++) {
     child = node->children[i];
     float childScore = currentPlayer*child->score/child->num_visited 
-              + 2.0 * sqrt(log(node->num_visited/child->num_visited));
+              + 0.3 * sqrt(log(node->num_visited/child->num_visited));
     if (childScore > maxScore) {
       maxScore = childScore;
       numBestChildren = 1;
@@ -121,7 +121,6 @@ void MCTreeSearch<MoveType, NodeStateType>::backpropagate(Node* node, float scor
 {
   node->score += score; 
   node->num_visited++;
-  node->state.adjustScore(score);
   if(node -> parent != nullptr) 
     backpropagate(node->parent, node->state.adjustScore(score));
 }

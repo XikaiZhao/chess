@@ -96,6 +96,10 @@ Move RandomPlayer<isWhite>::makeMove(Board& board, const std::vector<Move>& lega
 /////////////////////////////////////////////////////////////////////////////
 #include "GameMCTSNodeState.h"
 #include "mcts/MCTS.h"
+#ifdef USE_NNUE
+#include "nnue/NNUE.h"
+#endif
+
 template <bool isWhite>
 Move AIPlayer<isWhite>::makeMove(Board& board, const std::vector<Move>& legalMoves) {
     if (legalMoves.size() == 0) 
@@ -105,6 +109,10 @@ Move AIPlayer<isWhite>::makeMove(Board& board, const std::vector<Move>& legalMov
     
     GameMCTSNodeState state(board, legalMoves);
     MCTreeSearch<Move, GameMCTSNodeState> mcts(_timeLimit);
+#ifdef USE_NNUE
+    NNUE nnue;
+    state.setNNUE(&nnue);
+ #endif   
     Move move = mcts.search(state);
     Player<isWhite>::makeMove(board, move);
     //std::cout << "Move made: " << move.toString() << std::endl;

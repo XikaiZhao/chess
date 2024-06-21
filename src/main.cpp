@@ -7,6 +7,32 @@
 #include <ctime>  
 #include <cstdio>
 #include <unistd.h>
+#include "nnue/NNUEModel.h"
+
+#define REDIRECT_STDOUT_TO_FILE 
+
+#ifdef REDIRECT_STDOUT_TO_FILE
+int redirect_stdout(std::string filename) {
+    fflush(stdout); // Flush the output buffer
+    int stdout_copy = dup(STDOUT_FILENO);
+    if (!freopen(filename.c_str(), "a", stdout)) {
+        std::cerr << "Failed to redirect stdout" << std::endl;
+        close(stdout_copy);
+        return 1;
+    }
+    return stdout_copy;
+}
+void restore_stdout(int stdout_copy) {
+    fflush(stdout); // Flush the output buffer
+    dup2(stdout_copy, STDOUT_FILENO);
+    close(stdout_copy);
+    //fclose(stdout);  // Close the output file
+}
+#else
+#define redirect_stdout(x) 0
+#define restore_stdout(x)
+#endif
+
 
 GameStatus makeMove(Board& board, Player<true>* whitePlayer, Player<false>* blackPlayer) {
     std::vector<Move> legalMoves;
@@ -37,6 +63,11 @@ bool handleUCICommand(const std::string& command, Board& board, std::string outF
         std::cout << "id author MyName\n";
         std::cout << "uciok\n";
     } else if (token == "isready") {
+#ifdef USE_NNUE
+        int stdout_copy = redirect_stdout(outFileName);
+        NNUEModel::getInstance();
+        restore_stdout(stdout_copy);
+#endif
         std::cout << "readyok\n";
     } else if (token == "position") {
         std::string positionCmd;
@@ -63,13 +94,7 @@ bool handleUCICommand(const std::string& command, Board& board, std::string outF
         // Handle the engine's move calculation and output best move
         //std::streambuf* coutbuf = std::cout.rdbuf(); // Backup the buffer of std::cout
         //std::cout.rdbuf(outFile.rdbuf()); // Redirect std::cout to the output file
-        int stdout_copy = dup(STDOUT_FILENO);
-        freopen(outFileName.c_str(), "a", stdout); // Redirect printf to the output file
-
-        printf("Getting best move... current board:\n");
-        printf("%s\n", board.toString().data());
-        fflush(stdout); // Flush the output buffer
-
+        int stdout_copy = redirect_stdout(outFileName);
         Move bestMove;
         std::vector<Move> legalMoves;
         GameStatus gameStatus = BoardWrapper::getGameStatus(board, legalMoves);
@@ -87,10 +112,7 @@ bool handleUCICommand(const std::string& command, Board& board, std::string outF
                 bestMove = blackPlayer.makeMove(board, legalMoves);
             }
         }
-        printf("Best move: %s\n", bestMove.toString().c_str());
-        fflush(stdout); // Flush the output buffer
-        dup2(stdout_copy, STDOUT_FILENO);
-        close(stdout_copy); 
+        restore_stdout(stdout_copy);
         //std::cout.rdbuf(coutbuf); // Restore std::cout's original buffer
         std::cout << "bestmove " << bestMove.toString() << std::endl;
     } else if (token == "quit") {

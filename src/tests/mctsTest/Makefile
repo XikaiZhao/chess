@@ -1,12 +1,12 @@
 SRC_DIR = ../..
-BUILD_DIR = ../../../build
+BUILD_DIR = ../../../bin
 MCTS_LIBRARY=$(BUILD_DIR)/mcts/libMCTS.a
 
 CXX = g++ -std=c++17
 CXXFLAGS = -Wall -g -I$(SRC_DIR)
 
 # Main application object files (without main.cpp)
-SRC_SOURCES := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/mcts/*.cpp)
+SRC_SOURCES := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/mcts/*.cpp) $(wildcard $(SRC_DIR)/nnue/*.cpp)
 SRC_OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRC_SOURCES))
 SRC_OBJECTS := $(filter-out $(BUILD_DIR)/main.o, $(SRC_OBJECTS))
 

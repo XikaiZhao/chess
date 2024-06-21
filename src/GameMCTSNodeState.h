@@ -1,11 +1,12 @@
 #ifndef GAMEMCTSSTATE_H
 #define GAMEMCTSSTATE_H
 
+#include <memory>
 #include "mcts/MCTSNodeState.h"
 #include "Defs.h"
 #include "Board.h"
 #include "BoardWrapper.h"
-#include <memory>
+#include "nnue/NNUE.h"
 
 class GameMCTSNodeState : public MCTSNodeState<Move>
 {
@@ -37,6 +38,9 @@ class GameMCTSNodeState : public MCTSNodeState<Move>
       _board = other._board;
       _gameStatus = GameStatus::NONE;
       _legalMovesGenerated = false;
+#ifdef USE_NNUE
+      _nnue = other._nnue;
+#endif
       return *this;
     }
 
@@ -44,10 +48,20 @@ class GameMCTSNodeState : public MCTSNodeState<Move>
       return _board.getBoard();
     }
 
+#ifdef USE_NNUE
+    void setNNUE(NNUE* nnue) {
+      _nnue = nnue;
+    }
+#endif
+
   private:
     Board _board;
     GameStatus _gameStatus = GameStatus::NONE;
     bool _legalMovesGenerated = false;
+
+#ifdef USE_NNUE
+    NNUE* _nnue = nullptr;
+#endif
 };
 
 #endif //GAMEMCTSSTATE_H

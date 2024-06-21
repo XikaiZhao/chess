@@ -6,6 +6,8 @@
 
 #define NDEBUG
 
+#define USE_NNUE
+
 #define nrow 8
 #define ncol 8
 #define nele 64
