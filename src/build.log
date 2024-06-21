@@ -1,0 +1,47 @@
+g++ -g -Wall -std=c++17 -c Piece.cpp
+Piece.cpp:146:6: error: ‘template<bool isWhite> class Knight’ used without template arguments
+  146 | void Knight::getLegalMovesHelperFunc(Board* board, std::vector<Move>& legalMoves, int pieceIndexKingChecked, int dx, int dy) {
+      |      ^~~~~~
+Piece.cpp: In function ‘void getLegalMovesHelperFunc(Board*, std::vector<Move>&, int, int, int)’:
+Piece.cpp:148:9: error: ‘getLegalMovesKingCheckedHelper’ was not declared in this scope
+  148 |         getLegalMovesKingCheckedHelper<isWhite>(board, legalMoves, pieceIndexKingChecked, dx, dy);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Piece.cpp:150:9: error: ‘getLegalMovesHelper’ was not declared in this scope; did you mean ‘getLegalMovesHelperFunc’?
+  150 |         getLegalMovesHelper<isWhite>(board, legalMoves, dx, dy);
+      |         ^~~~~~~~~~~~~~~~~~~
+      |         getLegalMovesHelperFunc
+Piece.cpp: In instantiation of ‘void Knight<isWhite>::getLegalMoves(Board*, std::vector<Move>&, int) [with bool isWhite = true]’:
+Piece.cpp:568:16:   required from here
+Piece.cpp:207:9: error: invalid use of member function ‘void Knight<isWhite>::getLegalMovesHelperFunc(Board*, std::vector<Move>&, int, int, int) [with bool isWhite = true]’ (did you forget the ‘()’ ?)
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~
+Piece.cpp:207:42: warning: left operand of comma operator has no effect [-Wunused-value]
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |                                          ^~~~~
+Piece.cpp:207:59: warning: right operand of comma operator has no effect [-Wunused-value]
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |                                          ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+Piece.cpp:207:82: warning: right operand of comma operator has no effect [-Wunused-value]
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+Piece.cpp:207:85: warning: right operand of comma operator has no effect [-Wunused-value]
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+Piece.cpp: In instantiation of ‘void Knight<isWhite>::getLegalMoves(Board*, std::vector<Move>&, int) [with bool isWhite = false]’:
+Piece.cpp:569:16:   required from here
+Piece.cpp:207:9: error: invalid use of member function ‘void Knight<isWhite>::getLegalMovesHelperFunc(Board*, std::vector<Move>&, int, int, int) [with bool isWhite = false]’ (did you forget the ‘()’ ?)
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~
+Piece.cpp:207:42: warning: left operand of comma operator has no effect [-Wunused-value]
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |                                          ^~~~~
+Piece.cpp:207:59: warning: right operand of comma operator has no effect [-Wunused-value]
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |                                          ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+Piece.cpp:207:82: warning: right operand of comma operator has no effect [-Wunused-value]
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+Piece.cpp:207:85: warning: right operand of comma operator has no effect [-Wunused-value]
+  207 |         getLegalMovesHelperFunc<isWhite>(board, legalMoves, pieceIndexKingChecked, 0, 0);
+      |                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+make: *** [Makefile:23: Piece.o] Error 1
